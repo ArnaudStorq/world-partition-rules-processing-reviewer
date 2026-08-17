@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WPRulesReviewer.App/WPRulesReviewer.App.csproj" />
+    <Project Path="src/WPRulesReviewer.Core/WPRulesReviewer.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WPRulesReviewer.Core.Tests/WPRulesReviewer.Core.Tests.csproj" />
+  </Folder>
+</Solution>
