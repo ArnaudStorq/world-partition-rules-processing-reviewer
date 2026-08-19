@@ -430,18 +430,6 @@
                             <TextBlock Text="Copy rows" />
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource Button.Subtle}" Command="{Binding ExportCsvCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE9F9;" Style="{StaticResource Glyph}" FontSize="13" Margin="0,0,6,0" />
-                            <TextBlock Text="Export CSV" />
-                        </StackPanel>
-                    </Button>
-                    <Button Style="{StaticResource Button.Subtle}" Command="{Binding ExportMarkdownCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE8A5;" Style="{StaticResource Glyph}" FontSize="13" Margin="0,0,6,0" />
-                            <TextBlock Text="Export MD" />
-                        </StackPanel>
-                    </Button>
                     <Button Style="{StaticResource Button.Subtle}" Command="{Binding RevealInExplorerCommand}"
                             ToolTip="Show the downloaded Sundance.log in Windows Explorer">
                         <StackPanel Orientation="Horizontal">
@@ -620,7 +608,7 @@
         <Border Grid.Row="1" Style="{StaticResource Card}" Padding="14,10" Margin="0,10,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="260" />
+                    <ColumnDefinition Width="780" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>

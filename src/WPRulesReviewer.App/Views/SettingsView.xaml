@@ -103,30 +103,18 @@
                     </StackPanel>
                 </Expander>
 
-                <!-- Window / Tray -->
+                <!-- Window -->
                 <Expander Margin="0,0,0,10">
                     <Expander.Header>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE737;" Style="{StaticResource Glyph}" FontSize="14" Foreground="{DynamicResource Brush.Accent}" Margin="0,0,9,0" />
-                            <TextBlock Text="Window &amp; tray" Style="{StaticResource SectionHeader}" />
+                            <TextBlock Text="Window" Style="{StaticResource SectionHeader}" />
                         </StackPanel>
                     </Expander.Header>
                     <StackPanel>
                         <DockPanel Style="{StaticResource Row}">
-                            <TextBlock Text="Minimize to tray" Style="{StaticResource RowLabel}" DockPanel.Dock="Left" />
-                            <ToggleButton Style="{StaticResource Switch}" DockPanel.Dock="Right" IsChecked="{Binding Model.MinimizeToTray}" />
-                        </DockPanel>
-                        <DockPanel Style="{StaticResource Row}">
-                            <TextBlock Text="Close to tray" Style="{StaticResource RowLabel}" DockPanel.Dock="Left" />
-                            <ToggleButton Style="{StaticResource Switch}" DockPanel.Dock="Right" IsChecked="{Binding Model.CloseToTray}" />
-                        </DockPanel>
-                        <DockPanel Style="{StaticResource Row}">
                             <TextBlock Text="Start minimized" Style="{StaticResource RowLabel}" DockPanel.Dock="Left" />
                             <ToggleButton Style="{StaticResource Switch}" DockPanel.Dock="Right" IsChecked="{Binding Model.StartMinimized}" />
-                        </DockPanel>
-                        <DockPanel Style="{StaticResource Row}">
-                            <TextBlock Text="Tray notifications" Style="{StaticResource RowLabel}" DockPanel.Dock="Left" />
-                            <ToggleButton Style="{StaticResource Switch}" DockPanel.Dock="Right" IsChecked="{Binding Model.ShowTrayNotifications}" />
                         </DockPanel>
                         <DockPanel Style="{StaticResource Row}">
                             <TextBlock Text="Confirm on exit" Style="{StaticResource RowLabel}" DockPanel.Dock="Left" />

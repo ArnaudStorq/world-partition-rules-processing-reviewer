@@ -15,11 +15,8 @@ public sealed class AppSettings
     /// <summary>Number of rows shown per page in the results grid.</summary>
     public int ItemsPerPage { get; set; } = 100;
 
-    // ---- Tray / window -----------------------------------------------------
-    public bool MinimizeToTray { get; set; } = true;
-    public bool CloseToTray { get; set; }
+    // ---- Window ------------------------------------------------------------
     public bool StartMinimized { get; set; }
-    public bool ShowTrayNotifications { get; set; } = true;
     public bool ConfirmOnExit { get; set; } = true;
     public bool RememberWindowLayout { get; set; } = true;
 

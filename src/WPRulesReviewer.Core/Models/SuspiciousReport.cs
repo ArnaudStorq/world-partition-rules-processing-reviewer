@@ -44,6 +44,9 @@ public sealed class SuspiciousReport
     public DateTimeOffset ReportedAt { get; set; } = DateTimeOffset.Now;
     public string Comment { get; set; } = string.Empty;
 
+    /// <summary>How confident the reviewer is about this report, from 1 (unsure) to 5 (full confidence).</summary>
+    public int Confidence { get; set; } = 5;
+
     // ---- Session / TeamCity build context ----------------------------------
     public string SessionName { get; set; } = string.Empty;
     public int? TeamCityBuildId { get; set; }

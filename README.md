@@ -20,8 +20,8 @@ anomalies, and keep track of what a human has already reviewed.
 - **Human review tracking** – mark rows as read, **Approve** or **Flag** operations (single or
   multi-selection) with free-text comments. Reports are persisted as JSON and browsable in
   dedicated *Approved reports* / *Suspicious reports* tabs.
-- **Polished UX** – light/dark themes, resizable/collapsible panels, system-tray support,
-  pagination, and persisted window layout.
+- **Polished UX** – light/dark themes, resizable/collapsible panels, pagination, and persisted
+  window layout.
 
 ## Project layout
 

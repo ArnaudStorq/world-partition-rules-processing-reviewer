@@ -1,6 +1,7 @@
 <UserControl x:Class="WPRulesReviewer.App.Views.ReportsPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:WPRulesReviewer.App.Controls"
              xmlns:core="clr-namespace:WPRulesReviewer.Core.Models;assembly=WPRulesReviewer.Core">
     <Grid>
         <Grid.RowDefinitions>
@@ -24,6 +25,36 @@
                 <Border Background="{DynamicResource Brush.SurfaceAlt}" CornerRadius="6" Padding="6,1" Margin="10,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="{Binding Count, StringFormat={}{0} reports}" Style="{StaticResource Text.Muted}" />
                 </Border>
+                <Border Margin="10,0,0,0" VerticalAlignment="Center" Width="660"
+                        Background="{DynamicResource Brush.Control}" BorderBrush="{DynamicResource Brush.ControlBorder}"
+                        BorderThickness="1" CornerRadius="8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="&#xE721;" Style="{StaticResource Glyph}" FontSize="13"
+                                   Foreground="{DynamicResource Brush.TextMuted}" Margin="9,0,0,0" VerticalAlignment="Center" />
+                        <TextBox Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 BorderThickness="0" Background="Transparent" VerticalAlignment="Center" Padding="6,4"
+                                 ToolTip="Search reports (actor, comment, session, assignment...)" />
+                        <Button Grid.Column="2" Command="{Binding ClearSearchCommand}" Cursor="Hand"
+                                Background="Transparent" BorderThickness="0" Padding="6,0" Margin="0,0,4,0"
+                                ToolTip="Clear search"
+                                Visibility="{Binding SearchText, Converter={StaticResource StrToVis}}">
+                            <TextBlock Text="&#xE711;" Style="{StaticResource Glyph}" FontSize="12"
+                                       Foreground="{DynamicResource Brush.TextMuted}" />
+                        </Button>
+                    </Grid>
+                </Border>
+                <Button Style="{StaticResource Button.Subtle}" Command="{Binding CopyAllCommand}" Margin="10,0,0,0"
+                        ToolTip="Copy every report to the clipboard as text (actor path, assignment and comment)">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE8C8;" Style="{StaticResource Glyph}" FontSize="13" Margin="0,0,6,0" />
+                        <TextBlock Text="Copy all reports to clipboard" />
+                    </StackPanel>
+                </Button>
             </StackPanel>
 
             <StackPanel Grid.Column="2" Orientation="Horizontal">
@@ -75,15 +106,30 @@
                                         BorderBrush="{DynamicResource Brush.ControlBorder}" BorderThickness="1"
                                         Padding="10,8" Margin="2,3">
                                     <StackPanel>
-                                        <StackPanel Orientation="Horizontal">
-                                            <Border Background="{DynamicResource Brush.Accent}" CornerRadius="4"
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" Background="{DynamicResource Brush.Accent}" CornerRadius="4"
                                                     Padding="6,1" VerticalAlignment="Center" Margin="0,0,8,0">
                                                 <TextBlock Text="{Binding AssignmentType}" FontSize="10.5" FontWeight="SemiBold"
                                                            Foreground="{DynamicResource Brush.AccentForeground}" />
                                             </Border>
-                                            <TextBlock Text="{Binding ActorSummary}" FontWeight="SemiBold"
+                                            <TextBlock Grid.Column="1" Text="{Binding ActorSummary}" FontWeight="SemiBold"
                                                        TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                                        </StackPanel>
+                                            <Button Grid.Column="2" Style="{StaticResource Button.Subtle}" Padding="4,1"
+                                                    VerticalAlignment="Center" Margin="6,0,0,0"
+                                                    Command="{Binding DataContext.DeleteReportCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Delete this report">
+                                                <TextBlock Text="&#xE711;" Style="{StaticResource Glyph}" FontSize="12"
+                                                           Foreground="{DynamicResource Brush.StatusError}" />
+                                            </Button>
+                                        </Grid>
+                                        <controls:StarRating Rating="{Binding Confidence}" GlyphSize="13"
+                                                             IsReadOnly="True" HorizontalAlignment="Left" Margin="0,4,0,0" />
                                         <TextBlock Text="{Binding Comment}" Style="{StaticResource Text.Muted}"
                                                    TextTrimming="CharacterEllipsis" Margin="0,4,0,0" />
                                         <TextBlock Style="{StaticResource Text.Muted}" FontSize="11" Margin="0,3,0,0">
@@ -110,6 +156,20 @@
                             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                                           Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}">
                                 <StackPanel Margin="6,4" DataContext="{Binding Selected}">
+                                    <Border Background="{DynamicResource Brush.SurfaceAlt}" CornerRadius="8" Padding="12,10" Margin="0,0,0,10">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Confidence" Style="{StaticResource Text.Muted}" FontSize="11"
+                                                       VerticalAlignment="Center" Margin="0,0,10,0" />
+                                            <controls:StarRating Rating="{Binding Confidence, Mode=OneWay}"
+                                                                 GlyphSize="20" VerticalAlignment="Center"
+                                                                 IsReadOnly="True" />
+                                            <TextBlock Style="{StaticResource Text.Muted}" FontSize="11" VerticalAlignment="Center"
+                                                       Margin="10,0,0,0">
+                                                <Run Text="{Binding Confidence, Mode=OneWay}" /><Run Text="/5" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+
                                     <Border Background="{DynamicResource Brush.SurfaceAlt}" CornerRadius="8" Padding="12,10" Margin="0,0,0,10">
                                         <StackPanel>
                                             <TextBlock Text="Comment" Style="{StaticResource Text.Muted}" FontSize="11" />

@@ -8,15 +8,11 @@ namespace WPRulesReviewer.App;
 
 public partial class MainWindow : Window
 {
-    private bool _reallyExit;
-
     public MainWindow()
     {
         InitializeComponent();
         Loaded += OnLoaded;
-        StateChanged += OnStateChanged;
         Closing += OnClosing;
-        Closed += (_, _) => Tray?.Dispose();
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -36,8 +32,6 @@ public partial class MainWindow : Window
         if (e.PropertyName == nameof(MainViewModel.ShowActivityLog) && DataContext is MainViewModel vm)
             SetLogPanelVisible(vm.ShowActivityLog);
     }
-
-    private AppSettings? Settings => (DataContext as MainViewModel)?.Settings;
 
     private void ApplyLayout(MainViewModel vm)
     {
@@ -153,40 +147,8 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnStateChanged(object? sender, EventArgs e)
-    {
-        if (WindowState == WindowState.Minimized && Settings?.MinimizeToTray == true)
-            Hide();
-    }
-
     private void OnClosing(object? sender, CancelEventArgs e)
     {
         SaveLayout();
-        if (_reallyExit) return;
-        if (Settings?.CloseToTray == true)
-        {
-            e.Cancel = true;
-            Hide();
-            if (Settings.ShowTrayNotifications)
-                Tray?.ShowBalloonTip("WPRulesReviewer", "Still running in the tray.", Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
-        }
-    }
-
-    private void RestoreFromTray()
-    {
-        Show();
-        WindowState = WindowState.Normal;
-        Activate();
-        Topmost = true;
-        Topmost = false;
-    }
-
-    private void Tray_OnDoubleClick(object sender, RoutedEventArgs e) => RestoreFromTray();
-    private void TrayShow_OnClick(object sender, RoutedEventArgs e) => RestoreFromTray();
-
-    private void TrayExit_OnClick(object sender, RoutedEventArgs e)
-    {
-        _reallyExit = true;
-        Application.Current.Shutdown();
     }
 }

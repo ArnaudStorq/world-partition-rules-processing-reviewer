@@ -586,14 +586,16 @@ public sealed partial class SessionViewModel : ObservableObject
         var initial = record?.SuspiciousComment ?? string.Empty;
 
         var owner = System.Windows.Application.Current?.MainWindow;
-        var comment = Services.PromptDialog.Show(owner, title, prompt, initial);
-        if (string.IsNullOrWhiteSpace(comment)) return;
-        comment = comment.Trim();
+        var result = Services.PromptDialog.ShowWithConfidence(owner, title, prompt, initial);
+        if (result is null || string.IsNullOrWhiteSpace(result.Text)) return;
+        var comment = result.Text.Trim();
 
         try
         {
             var store = new SuspiciousReportStore(_settings.AppDataFolder, SuspiciousReportStore.SuspiciousFileName);
-            store.Add(SuspiciousReport.FromRecords(targets, _report, comment));
+            var report = SuspiciousReport.FromRecords(targets, _report, comment);
+            report.Confidence = result.Confidence;
+            store.Add(report);
             foreach (var r in targets) { r.IsReported = true; r.SuspiciousComment = comment; }
             _log.Info($"Flagged {targets.Count} actor(s) as suspicious -> {store.FilePath}", "Review");
             RefreshView();
@@ -619,14 +621,16 @@ public sealed partial class SessionViewModel : ObservableObject
         var initial = record?.ApprovalComment ?? string.Empty;
 
         var owner = System.Windows.Application.Current?.MainWindow;
-        var comment = Services.PromptDialog.Show(owner, title, prompt, initial);
-        if (string.IsNullOrWhiteSpace(comment)) return;
-        comment = comment.Trim();
+        var result = Services.PromptDialog.ShowWithConfidence(owner, title, prompt, initial);
+        if (result is null || string.IsNullOrWhiteSpace(result.Text)) return;
+        var comment = result.Text.Trim();
 
         try
         {
             var store = new SuspiciousReportStore(_settings.AppDataFolder, SuspiciousReportStore.ApprovedFileName);
-            store.Add(SuspiciousReport.FromRecords(targets, _report, comment));
+            var report = SuspiciousReport.FromRecords(targets, _report, comment);
+            report.Confidence = result.Confidence;
+            store.Add(report);
             foreach (var r in targets) { r.IsApproved = true; r.ApprovalComment = comment; }
             _log.Info($"Approved {targets.Count} operation(s) -> {store.FilePath}", "Review");
             RefreshView();

@@ -564,7 +564,8 @@
                 <Setter Property="Background" Value="{DynamicResource Brush.ControlHover}" />
             </Trigger>
             <Trigger Property="IsSelected" Value="True">
-                <Setter Property="Background" Value="{DynamicResource Brush.Selection}" />
+                <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
+                <Setter Property="Foreground" Value="{DynamicResource Brush.AccentForeground}" />
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -582,6 +583,13 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <Style.Triggers>
+            <!-- Keep the row's accent selection visible and the text readable on top of it. -->
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Foreground" Value="{DynamicResource Brush.AccentForeground}" />
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!-- ======================= ScrollBar (slim) ======================= -->
