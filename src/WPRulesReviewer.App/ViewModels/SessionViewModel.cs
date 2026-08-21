@@ -713,6 +713,111 @@ public sealed partial class SessionViewModel : ObservableObject
     [ObservableProperty] private bool _isAiBusy;
     public bool CanUseAi => _ai.IsAvailable;
 
+    /// <summary>Safety cap on unread rows considered in one auto-resolve pass. High on purpose: the AI
+    /// now returns match rules (not per-row indices), and the rows live in a file, so all candidates can
+    /// be covered without bloating the prompt.</summary>
+    private const int MaxAutoResolveCandidates = 20000;
+
+    /// <summary>
+    /// Open the "Auto-resolve reading" dialog: confront the displayed unread rows with the saved
+    /// approved/suspicious reports through the AI, preview the proposed groups, then mark as read.
+    /// </summary>
+    [RelayCommand]
+    private void AutoResolveReading()
+    {
+        if (_report is null) return;
+
+        if (!_ai.IsAvailable)
+        {
+            _log.Warning("AI is not available. Enable it and set the Cursor agent path in Settings > AI.", "AI");
+            return;
+        }
+
+        // Resolve across ALL applied assignment types (HLODLayer, IncludeInHLOD, DataLayer,
+        // RuntimeGrid), independent of the current tab/scope/filters.
+        AutoResolveViewModel vm;
+        if (_autoResolveVm is not null && _autoResolveVm.HasPreviousResults)
+        {
+            // Reopen straight on the last collected plan, pruning rows read in the meantime.
+            vm = _autoResolveVm;
+            vm.RestorePreviousResults();
+        }
+        else
+        {
+            var candidates = _report.Records
+                .Where(r => r.Category == RecordCategory.Applied && !r.IsRead)
+                .Take(MaxAutoResolveCandidates)
+                .ToList();
+
+            var reports = LoadKnownReports();
+            vm = new AutoResolveViewModel(_report, candidates, reports, _ai, _settings, _log);
+            _autoResolveVm = vm;
+        }
+
+        var dialog = new Views.AutoResolveDialog
+        {
+            DataContext = vm,
+            Owner = System.Windows.Application.Current?.MainWindow
+        };
+        dialog.ShowDialog();
+
+        // Refresh when rows were marked read, or when the AI attached "AI Check" notes to deferred rows.
+        if (vm.AppliedCount > 0 || vm.DeferredCount > 0)
+            RefreshView();
+    }
+
+    /// <summary>Show the AI's "I leave this to the human" reasoning attached to a row (AI Check button).</summary>
+    [RelayCommand]
+    private void ShowAiThought(RuleRecord? record)
+    {
+        if (record is null || !record.HasAiReviewNote) return;
+
+        var dialog = new Views.AiThoughtDialog(record, LoadKnownReports())
+        {
+            Owner = System.Windows.Application.Current?.Windows
+                .OfType<System.Windows.Window>()
+                .FirstOrDefault(w => w.IsActive) ?? System.Windows.Application.Current?.MainWindow
+        };
+        dialog.ShowDialog();
+    }
+
+    /// <summary>Cached across dialog sessions so reopening lands on the last collected plan.</summary>
+    private AutoResolveViewModel? _autoResolveVm;
+
+    private IReadOnlyList<AutoResolveKnownReport> LoadKnownReports()
+    {
+        var list = new List<AutoResolveKnownReport>();
+
+        void AddAll(string fileName, string kind, string prefix)
+        {
+            var store = new SuspiciousReportStore(_settings.AppDataFolder, fileName);
+            int n = 1;
+            foreach (var r in store.Load())
+            {
+                var actors = (r.Actors.Count > 0
+                        ? r.Actors.Select(a => string.IsNullOrWhiteSpace(a.Value)
+                            ? $"{a.ActorPath} | {a.AssignmentType}"
+                            : $"{a.ActorPath} | {a.AssignmentType}={a.Value}")
+                        : new[] { $"{r.ActorPath} | {r.AssignmentType}={r.Value}" })
+                    .ToList();
+
+                list.Add(new AutoResolveKnownReport
+                {
+                    Id = $"{prefix}{n++}",
+                    Kind = kind,
+                    Confidence = r.Confidence,
+                    Comment = r.Comment,
+                    Actors = actors,
+                    Source = r
+                });
+            }
+        }
+
+        AddAll(SuspiciousReportStore.ApprovedFileName, "APPROVED", "A");
+        AddAll(SuspiciousReportStore.SuspiciousFileName, "SUSPICIOUS", "S");
+        return list;
+    }
+
     [RelayCommand]
     private async Task RunAiAsync()
     {

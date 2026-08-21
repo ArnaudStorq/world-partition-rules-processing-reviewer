@@ -13,6 +13,29 @@ public partial class MainWindow : Window
         InitializeComponent();
         Loaded += OnLoaded;
         Closing += OnClosing;
+        StateChanged += OnStateChangedInternal;
+    }
+
+    // ---- Custom title bar (WindowChrome) -----------------------------------
+    private void TitleBar_Minimize(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+
+    private void TitleBar_MaximizeRestore(object sender, RoutedEventArgs e)
+        => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+
+    private void TitleBar_Close(object sender, RoutedEventArgs e) => Close();
+
+    private void OnStateChangedInternal(object? sender, System.EventArgs e)
+    {
+        bool max = WindowState == WindowState.Maximized;
+
+        // WindowChrome lets the maximized client area overflow the work area by the resize border;
+        // compensate with matching padding so nothing is clipped and the taskbar stays visible.
+        RootGrid.Margin = max ? SystemParameters.WindowResizeBorderThickness : new Thickness(0);
+
+        // Swap the glyph and tooltip between Maximize and Restore. Update the inner TextBlock's Text
+        // (not the button Content) so the hard-coded white foreground is preserved in every theme.
+        MaxRestoreGlyph.Text = max ? "\uE923" : "\uE922";
+        MaxRestoreButton.ToolTip = max ? "Restore" : "Maximize";
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -38,6 +61,7 @@ public partial class MainWindow : Window
         var s = vm.Settings;
         if (!s.RememberWindowLayout) return;
 
+        // Window bounds are restored pre-Show in App.OnStartup; here we only restore panel sizes.
         if (s.BuildsPanelWidth > 0)
         {
             BuildsColumn.Width = new GridLength(s.BuildsPanelWidth);

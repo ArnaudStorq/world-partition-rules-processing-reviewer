@@ -1,0 +1,554 @@
+<Window x:Class="WPRulesReviewer.App.Views.AutoResolveDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:WPRulesReviewer.App.ViewModels"
+        xmlns:controls="clr-namespace:WPRulesReviewer.App.Controls"
+        Title="Auto-resolve reading" Height="960" Width="1320" MinHeight="640" MinWidth="900"
+        ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource Brush.Window}"
+        TextElement.Foreground="{DynamicResource Brush.TextPrimary}"
+        FontFamily="Segoe UI" UseLayoutRounding="True" SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ===== Header ===== -->
+        <Border Grid.Row="0" BorderBrush="{DynamicResource Brush.Accent}" BorderThickness="0,0,0,2" Padding="20,16">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="{DynamicResource Color.HeaderBg}" Offset="0" />
+                    <GradientStop Color="{DynamicResource Color.Surface}" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="&#xE8B9;" Style="{StaticResource Glyph}" FontSize="24"
+                           Foreground="{DynamicResource Brush.Accent}" VerticalAlignment="Center" Margin="0,0,14,0" />
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Auto-resolve reading" FontSize="19" FontWeight="SemiBold" />
+                    <TextBlock Style="{StaticResource Text.Muted}" FontSize="12.5">
+                        <Run Text="Confront all data with your review reports and mark the resolved assignments as read — session " />
+                        <Run Text="{Binding SessionName, Mode=OneWay}" FontWeight="SemiBold" />
+                    </TextBlock>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ===== Body ===== -->
+        <Grid Grid.Row="1" Margin="20,16">
+
+            <!-- Intro -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding IsIntro, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <TextBlock TextWrapping="Wrap" FontSize="13.5" LineHeight="21"
+                               Text="Auto-resolve reading marks assignments as read automatically by following the rules you established in your reports — nothing more. It analyses every unread applied assignment across all categories (HLODLayer, IncludeInHLOD, DataLayer, RuntimeGrid), together with your Approved and Suspicious reports, using the local Cursor AI agent, and proposes to mark as read the ones that clearly match an existing report." />
+                    <TextBlock TextWrapping="Wrap" FontSize="13.5" LineHeight="21" Margin="0,10,0,0"
+                               Text="Nothing is changed automatically: after processing you get a preview grouped by category where every entry is pre-checked, and you decide what to actually mark as read." />
+
+                    <!-- Stat cards -->
+                    <Grid Margin="0,18,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Style="{StaticResource Card}" Padding="16,14">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE71C;" Style="{StaticResource Glyph}" FontSize="16"
+                                               Foreground="{DynamicResource Brush.Accent}" Margin="0,0,8,0" />
+                                    <TextBlock Text="Assignments to resolve" Style="{StaticResource Text.Muted}" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding CandidateCount}" FontSize="30" FontWeight="Bold" Margin="0,6,0,0" />
+                                <TextBlock Text="unread applied assignments (all types)" Style="{StaticResource Text.Muted}" FontSize="11.5" />
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="2" Style="{StaticResource Card}" Padding="16,14">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE8FB;" Style="{StaticResource Glyph}" FontSize="16"
+                                               Foreground="{DynamicResource Brush.StatusExpected}" Margin="0,0,8,0" />
+                                    <TextBlock Text="Knowledge base" Style="{StaticResource Text.Muted}" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding ReportCount}" FontSize="30" FontWeight="Bold" Margin="0,6,0,0" />
+                                <TextBlock Text="approved + suspicious reports" Style="{StaticResource Text.Muted}" FontSize="11.5" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Local input files -->
+                    <Border Style="{StaticResource Card}" Padding="16,14" Margin="0,16,0,0">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="&#xE8A5;" Style="{StaticResource Glyph}" FontSize="15"
+                                           Foreground="{DynamicResource Brush.Accent}" Margin="0,0,8,0" />
+                                <TextBlock Text="Local files" Style="{StaticResource Text.Heading}" FontSize="13.5" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource Text.Muted}" FontSize="11.5" TextWrapping="Wrap" Margin="0,0,0,8"
+                                       Text="A single request is sent to the AI. The exact data and prompt are written locally so you can inspect them:" />
+
+                            <TextBlock Text="Rows data" Style="{StaticResource Text.Muted}" FontSize="11" Margin="0,2,0,0" />
+                            <Button Style="{StaticResource Button.Subtle}" HorizontalAlignment="Left" Padding="8,4"
+                                    Command="{Binding OpenRowsFileCommand}" ToolTip="Open the rows data file"
+                                    Visibility="{Binding RowsFilePath, Converter={StaticResource StrToVis}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE8E5;" Style="{StaticResource Glyph}" FontSize="12" Margin="0,0,6,0"
+                                               Foreground="{DynamicResource Brush.Accent}" />
+                                    <TextBlock Text="{Binding RowsFilePath}" FontFamily="Cascadia Mono, Consolas" FontSize="11.5" />
+                                </StackPanel>
+                            </Button>
+
+                            <TextBlock Text="Prompt sent to the AI" Style="{StaticResource Text.Muted}" FontSize="11" Margin="0,8,0,0" />
+                            <Button Style="{StaticResource Button.Subtle}" HorizontalAlignment="Left" Padding="8,4"
+                                    Command="{Binding OpenPromptFileCommand}" ToolTip="Open the prompt file"
+                                    Visibility="{Binding PromptFilePath, Converter={StaticResource StrToVis}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE8E5;" Style="{StaticResource Glyph}" FontSize="12" Margin="0,0,6,0"
+                                               Foreground="{DynamicResource Brush.Accent}" />
+                                    <TextBlock Text="{Binding PromptFilePath}" FontFamily="Cascadia Mono, Consolas" FontSize="11.5" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Running -->
+            <Grid Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
+                    <TextBlock Text="&#xE9F5;" FontFamily="Segoe MDL2 Assets" FontSize="30"
+                               VerticalAlignment="Center" Foreground="{DynamicResource Brush.Accent}"
+                               RenderTransformOrigin="0.5,0.5" Margin="0,0,14,0">
+                        <TextBlock.RenderTransform>
+                            <RotateTransform x:Name="SpinTransform" />
+                        </TextBlock.RenderTransform>
+                        <TextBlock.Triggers>
+                            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="SpinTransform"
+                                                         Storyboard.TargetProperty="Angle"
+                                                         From="0" To="360" Duration="0:0:1.1" RepeatBehavior="Forever" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </TextBlock.Triggers>
+                    </TextBlock>
+                    <TextBlock Text="Processing with AI" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <TextBlock Grid.Row="1" Text="{Binding StatusText}" Style="{StaticResource Text.Muted}"
+                           HorizontalAlignment="Center" Margin="0,8,0,12" TextWrapping="Wrap" MaxWidth="620"
+                           TextAlignment="Center" />
+
+                <Border Grid.Row="2" Background="{DynamicResource Brush.SurfaceAlt}"
+                        BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" CornerRadius="8">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="12,9,12,6">
+                            <TextBlock Text="&#xE756;" Style="{StaticResource Glyph}" FontSize="13"
+                                       Foreground="{DynamicResource Brush.Accent}" Margin="0,0,7,0" VerticalAlignment="Center" />
+                            <TextBlock Text="Live agent reasoning" FontWeight="SemiBold" FontSize="12.5" VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <TextBox x:Name="StreamBox" Grid.Row="1"
+                                 Text="{Binding StreamText, Mode=OneWay}"
+                                 IsReadOnly="True" BorderThickness="0" Background="Transparent"
+                                 FontFamily="Cascadia Mono, Consolas" FontSize="12"
+                                 TextWrapping="Wrap" AcceptsReturn="True"
+                                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                                 Padding="12,0,12,12"
+                                 TextChanged="StreamBox_OnTextChanged" />
+                    </Grid>
+                </Border>
+
+                <TextBlock Grid.Row="2" Text="Invoking Cursor agent..."
+                           Style="{StaticResource Text.Muted}" FontStyle="Italic" FontSize="12"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Visibility="{Binding HasStreamText, Converter={StaticResource BoolToVis}, ConverterParameter=invert}" />
+            </Grid>
+
+            <!-- Results -->
+            <Grid Visibility="{Binding IsResults, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0">
+                    <TextBlock Text="{Binding ResultsSummary}" TextWrapping="Wrap"
+                               FontSize="13.5" Margin="0,0,0,12" />
+                    <Border Background="#33F5A623" BorderBrush="#F5A623" BorderThickness="1" CornerRadius="6"
+                            Padding="10,7" Margin="0,0,0,12"
+                            Visibility="{Binding HasManualNotice, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE946;" Style="{StaticResource Glyph}" FontSize="15" Foreground="#F5A623"
+                                       VerticalAlignment="Top" Margin="0,1,9,0" />
+                            <TextBlock Text="{Binding ManualNoticeText}" TextWrapping="Wrap" FontSize="12.5"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Toolbar -->
+                <Grid Grid.Row="1" Margin="0,0,0,10"
+                      Visibility="{Binding HasGroups, Converter={StaticResource BoolToVis}}">
+                    <StackPanel Orientation="Horizontal">
+                        <Button Style="{StaticResource Button.Subtle}" Command="{Binding SelectAllCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE73A;" Style="{StaticResource Glyph}" FontSize="13" Margin="0,0,6,0" />
+                                <TextBlock Text="Select all" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource Button.Subtle}" Command="{Binding SelectNoneCommand}" Margin="8,0,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE739;" Style="{StaticResource Glyph}" FontSize="13" Margin="0,0,6,0" />
+                                <TextBlock Text="Select none" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource Button.Subtle}" Command="{Binding OpenReasoningCommand}" Margin="8,0,0,0"
+                                ToolTip="Open the AI reasoning written in plain English"
+                                Visibility="{Binding HasReasoning, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE8F2;" Style="{StaticResource Glyph}" FontSize="13" Margin="0,0,6,0" />
+                                <TextBlock Text="View AI reasoning" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource Button.Subtle}" Command="{Binding OpenAiLogCommand}" Margin="8,0,0,0"
+                                ToolTip="Open the raw AI processing log (data used to build the display)"
+                                Visibility="{Binding HasAiLog, Converter={StaticResource BoolToVis}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE9D9;" Style="{StaticResource Glyph}" FontSize="13" Margin="0,0,6,0" />
+                                <TextBlock Text="View AI processing log" />
+                            </StackPanel>
+                        </Button>
+
+                        <Border Width="420" Height="32" Margin="12,0,0,0" VerticalAlignment="Center"
+                                Background="{DynamicResource Brush.Control}" BorderBrush="{DynamicResource Brush.Border}"
+                                BorderThickness="1" CornerRadius="6">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="&#xE721;" Style="{StaticResource Glyph}" FontSize="14"
+                                           Foreground="{DynamicResource Brush.TextMuted}" VerticalAlignment="Center" Margin="9,0,6,0" />
+                                <TextBox Grid.Column="1" VerticalAlignment="Center" BorderThickness="0" Background="Transparent"
+                                         VerticalContentAlignment="Center" FontSize="13"
+                                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                                <Button Grid.Column="2" Command="{Binding ClearSearchCommand}" Cursor="Hand"
+                                        BorderThickness="0" Background="Transparent" Padding="6,0" Margin="0,0,2,0"
+                                        ToolTip="Clear search"
+                                        Visibility="{Binding SearchText, Converter={StaticResource StrToVis}}">
+                                    <TextBlock Text="&#xE711;" Style="{StaticResource Glyph}" FontSize="13"
+                                               Foreground="{DynamicResource Brush.TextMuted}" />
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                    <Border HorizontalAlignment="Right" Background="{DynamicResource Brush.Accent}" CornerRadius="10" Padding="10,3">
+                        <TextBlock VerticalAlignment="Center" Foreground="{DynamicResource Brush.AccentForeground}" FontWeight="SemiBold" FontSize="12">
+                            <Run Text="{Binding SelectedTotal, Mode=OneWay}" /><Run Text=" selected" />
+                        </TextBlock>
+                    </Border>
+                </Grid>
+
+                <!-- Empty state -->
+                <StackPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center"
+                            Visibility="{Binding HasGroups, Converter={StaticResource BoolToVis}, ConverterParameter=invert}">
+                    <TextBlock Text="&#xE73E;" Style="{StaticResource Glyph}" FontSize="42"
+                               HorizontalAlignment="Center" Foreground="{DynamicResource Brush.TextMuted}" />
+                    <TextBlock Text="Nothing to auto-resolve" FontSize="15" FontWeight="SemiBold"
+                               HorizontalAlignment="Center" Margin="0,10,0,0" />
+                    <TextBlock Text="No unread assignment was clearly covered by an existing report."
+                               Style="{StaticResource Text.Muted}" HorizontalAlignment="Center" Margin="0,4,0,0" />
+                </StackPanel>
+
+                <!-- Grouped preview -->
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"
+                              Visibility="{Binding HasGroups, Converter={StaticResource BoolToVis}}">
+                    <ItemsControl ItemsSource="{Binding Groups}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:AutoResolveGroupViewModel}">
+                                <Border Style="{StaticResource Card}" Margin="0,0,0,10" Padding="0"
+                                        Visibility="{Binding IsVisibleInFilter, Converter={StaticResource BoolToVis}}">
+                                    <Expander IsExpanded="{Binding IsExpanded, Mode=TwoWay}" Padding="12,10">
+                                        <Expander.Header>
+                                            <Grid HorizontalAlignment="Stretch">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                          VerticalAlignment="Center" Margin="0,0,10,0"
+                                                          ToolTip="Include/exclude this whole category" />
+
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,10,0">
+                                                    <TextBlock Text="&#xE8EC;" Style="{StaticResource Glyph}" FontSize="15"
+                                                               Foreground="{DynamicResource Brush.Accent}" Margin="0,0,8,0"
+                                                               VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding Category}" FontWeight="SemiBold" FontSize="14.5"
+                                                               VerticalAlignment="Center" />
+                                                    <Button Command="{Binding CopyPreviewCommand}" Cursor="Hand" Margin="12,0,0,0"
+                                                            BorderThickness="0" Background="Transparent" Padding="6,3"
+                                                            VerticalAlignment="Center" ToolTip="Copy this category's preview to the clipboard">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="&#xE8C8;" Style="{StaticResource Glyph}" FontSize="12"
+                                                                       Foreground="{DynamicResource Brush.TextMuted}" Margin="0,0,5,0" />
+                                                            <TextBlock Text="Copy preview" FontSize="11"
+                                                                       Foreground="{DynamicResource Brush.TextMuted}" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Border Background="#F5A623" CornerRadius="9" Padding="9,2" Margin="0,0,8,0"
+                                                            VerticalAlignment="Center"
+                                                            ToolTip="Actors of this category the AI did not cover (kept unread)"
+                                                            Visibility="{Binding HasNotTreated, Converter={StaticResource BoolToVis}}">
+                                                        <TextBlock Text="{Binding NotTreatedLabel}" Foreground="White"
+                                                                   FontWeight="SemiBold" FontSize="11.5" TextAlignment="Center" />
+                                                    </Border>
+                                                    <Border Background="{DynamicResource Brush.Accent}" CornerRadius="9"
+                                                            MinWidth="26" Padding="9,2" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding SelectionLabel}" Foreground="{DynamicResource Brush.AccentForeground}"
+                                                                   FontWeight="SemiBold" FontSize="11.5" TextAlignment="Center" />
+                                                    </Border>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Expander.Header>
+
+                                        <!-- Virtualized so expanding a large category is instant instead of
+                                             instantiating every row at once (which froze the UI). The list
+                                             has a bounded height and its own scrollbar to enable virtualization
+                                             inside the outer ScrollViewer. -->
+                                        <ListBox ItemsSource="{Binding Items}" Margin="30,8,4,4" MaxHeight="460"
+                                                 Background="Transparent" BorderThickness="0"
+                                                 HorizontalContentAlignment="Stretch"
+                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                                 ScrollViewer.CanContentScroll="True"
+                                                 VirtualizingPanel.IsVirtualizing="True"
+                                                 VirtualizingPanel.VirtualizationMode="Recycling"
+                                                 VirtualizingPanel.ScrollUnit="Pixel">
+                                            <ListBox.ItemContainerStyle>
+                                                <Style TargetType="ListBoxItem">
+                                                    <Setter Property="Padding" Value="0" />
+                                                    <Setter Property="Margin" Value="0" />
+                                                    <Setter Property="Background" Value="Transparent" />
+                                                    <Setter Property="BorderThickness" Value="0" />
+                                                    <Setter Property="Focusable" Value="False" />
+                                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="ListBoxItem">
+                                                                <ContentPresenter />
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </ListBox.ItemContainerStyle>
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate DataType="{x:Type vm:AutoResolveItemViewModel}">
+                                                    <Border Background="{DynamicResource Brush.SurfaceAlt}" CornerRadius="6"
+                                                            Padding="10,7" Margin="0,0,0,5"
+                                                            Visibility="{Binding MatchesFilter, Converter={StaticResource BoolToVis}}">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <CheckBox Grid.Column="0" IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                                                      VerticalAlignment="Top" Margin="0,1,10,0" />
+                                                            <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="*" />
+                                                                        <ColumnDefinition Width="Auto" />
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock Grid.Column="0" Text="{Binding Actor}" TextWrapping="Wrap"
+                                                                               FontFamily="Cascadia Mono, Consolas" FontSize="11.5"
+                                                                               VerticalAlignment="Center" />
+                                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top"
+                                                                                Margin="8,0,0,0">
+                                                                        <Button Command="{Binding CopyOutlinerPathCommand}" Cursor="Hand"
+                                                                                BorderThickness="0" Background="Transparent" Padding="4,2"
+                                                                                ToolTip="Copy Outliner path">
+                                                                            <StackPanel Orientation="Horizontal">
+                                                                                <TextBlock Text="&#xE8C8;" Style="{StaticResource Glyph}" FontSize="11"
+                                                                                           Foreground="{DynamicResource Brush.TextMuted}" Margin="0,0,4,0" />
+                                                                                <TextBlock Text="Copy path" FontSize="10.5"
+                                                                                           Foreground="{DynamicResource Brush.TextMuted}" />
+                                                                            </StackPanel>
+                                                                        </Button>
+                                                                        <Button Command="{Binding CopyActorNameCommand}" Cursor="Hand"
+                                                                                BorderThickness="0" Background="Transparent" Padding="4,2" Margin="6,0,0,0"
+                                                                                ToolTip="Copy actor name">
+                                                                            <StackPanel Orientation="Horizontal">
+                                                                                <TextBlock Text="&#xE8C8;" Style="{StaticResource Glyph}" FontSize="11"
+                                                                                           Foreground="{DynamicResource Brush.TextMuted}" Margin="0,0,4,0" />
+                                                                                <TextBlock Text="Copy name" FontSize="10.5"
+                                                                                           Foreground="{DynamicResource Brush.TextMuted}" />
+                                                                            </StackPanel>
+                                                                        </Button>
+                                                                    </StackPanel>
+                                                                </Grid>
+                                                                <TextBlock Text="{Binding Assignment}" Style="{StaticResource Text.Muted}"
+                                                                           FontSize="11" Margin="0,2,0,0" />
+                                                                <TextBlock Text="{Binding Rationale}" Style="{StaticResource Text.Muted}"
+                                                                           FontStyle="Italic" FontSize="11" TextWrapping="Wrap" Margin="0,3,0,0"
+                                                                           Visibility="{Binding Rationale, Converter={StaticResource StrToVis}}" />
+                                                            </StackPanel>
+                                                            <StackPanel Grid.Column="2" VerticalAlignment="Top" MinWidth="150">
+                                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                                                            ToolTip="How confident the AI is that this row is correctly covered">
+                                                                    <TextBlock Text="AI" Style="{StaticResource Text.Muted}" FontSize="10"
+                                                                               VerticalAlignment="Center" Margin="0,0,5,0" />
+                                                                    <controls:StarRating Rating="{Binding Confidence, Mode=OneWay}" GlyphSize="12"
+                                                                                         IsReadOnly="True" VerticalAlignment="Center" />
+                                                                </StackPanel>
+
+                                                                <ItemsControl ItemsSource="{Binding Reports}" HorizontalAlignment="Right"
+                                                                              Margin="0,4,0,0"
+                                                                              Visibility="{Binding HasReports, Converter={StaticResource BoolToVis}}">
+                                                                    <ItemsControl.ItemsPanel>
+                                                                        <ItemsPanelTemplate>
+                                                                            <WrapPanel Orientation="Horizontal" FlowDirection="RightToLeft" />
+                                                                        </ItemsPanelTemplate>
+                                                                    </ItemsControl.ItemsPanel>
+                                                                    <ItemsControl.ItemTemplate>
+                                                                        <DataTemplate DataType="{x:Type vm:AutoResolveReportRefViewModel}">
+                                                                            <Button Command="{Binding OpenCommand}" Cursor="Hand" Margin="4,0,0,4"
+                                                                                    Padding="0" BorderThickness="0" Background="Transparent"
+                                                                                    ToolTip="{Binding Comment}" FlowDirection="LeftToRight">
+                                                                                <Button.Template>
+                                                                                    <ControlTemplate TargetType="Button">
+                                                                                        <Border x:Name="Bd" CornerRadius="6" Padding="8,2">
+                                                                                            <TextBlock Text="{Binding Badge}" FontSize="10.5"
+                                                                                                       FontWeight="SemiBold" Foreground="White" />
+                                                                                        </Border>
+                                                                                        <ControlTemplate.Triggers>
+                                                                                            <DataTrigger Binding="{Binding IsApproved}" Value="True">
+                                                                                                <Setter TargetName="Bd" Property="Background"
+                                                                                                        Value="{DynamicResource Brush.StatusExpected}" />
+                                                                                            </DataTrigger>
+                                                                                            <DataTrigger Binding="{Binding IsSuspicious}" Value="True">
+                                                                                                <Setter TargetName="Bd" Property="Background" Value="#F5A623" />
+                                                                                            </DataTrigger>
+                                                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                                                <Setter TargetName="Bd" Property="Opacity" Value="0.82" />
+                                                                                            </Trigger>
+                                                                                        </ControlTemplate.Triggers>
+                                                                                    </ControlTemplate>
+                                                                                </Button.Template>
+                                                                            </Button>
+                                                                        </DataTemplate>
+                                                                    </ItemsControl.ItemTemplate>
+                                                                </ItemsControl>
+
+                                                                <Border Background="{DynamicResource Brush.Control}" CornerRadius="5"
+                                                                        Padding="7,1" Margin="0,4,0,0" HorizontalAlignment="Right">
+                                                                    <TextBlock Text="{Binding StatusLabel}" FontSize="10.5"
+                                                                               Style="{StaticResource Text.Muted}" />
+                                                                </Border>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </Expander>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- Error -->
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="480"
+                        Visibility="{Binding IsError, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="&#xE783;" Style="{StaticResource Glyph}" FontSize="42"
+                           HorizontalAlignment="Center" Foreground="#F5A623" />
+                <TextBlock Text="Could not auto-resolve" FontSize="15" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" Margin="0,10,0,0" />
+                <TextBlock Text="{Binding ErrorText}" Style="{StaticResource Text.Muted}"
+                           HorizontalAlignment="Center" TextAlignment="Center" Margin="0,6,0,0" TextWrapping="Wrap" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,14,0,0">
+                    <Button Style="{StaticResource Button.Subtle}" Command="{Binding OpenReasoningCommand}"
+                            Visibility="{Binding HasReasoning, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8F2;" Style="{StaticResource Glyph}" FontSize="13" Margin="0,0,6,0" />
+                            <TextBlock Text="View AI reasoning" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource Button.Subtle}" Command="{Binding OpenAiLogCommand}" Margin="8,0,0,0"
+                            Visibility="{Binding HasAiLog, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE9D9;" Style="{StaticResource Glyph}" FontSize="13" Margin="0,0,6,0" />
+                            <TextBlock Text="View AI processing log" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+
+        <!-- ===== Footer ===== -->
+        <Border Grid.Row="2" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,1,0,0" Padding="20,12">
+            <Grid>
+                <Button HorizontalAlignment="Left" Style="{StaticResource Button.Subtle}" Command="{Binding CancelCommand}"
+                        Content="Cancel" Padding="16,7" />
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <!-- Intro: run -->
+                    <Button Style="{StaticResource Button.Action}" Command="{Binding RunCommand}" Padding="18,8"
+                            Visibility="{Binding IsIntro, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE945;" Style="{StaticResource Glyph}" FontSize="13" Margin="0,0,7,0"
+                                       Foreground="{DynamicResource Brush.AccentForeground}" />
+                            <TextBlock Text="Run auto-resolve with AI" Foreground="{DynamicResource Brush.AccentForeground}"
+                                       FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Results: apply -->
+                    <Button Style="{StaticResource Button.Action}" Command="{Binding ApplyCommand}" Padding="18,8"
+                            Visibility="{Binding IsResults, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE73E;" Style="{StaticResource Glyph}" FontSize="13" Margin="0,0,7,0"
+                                       Foreground="{DynamicResource Brush.AccentForeground}" />
+                            <TextBlock Foreground="{DynamicResource Brush.AccentForeground}" FontWeight="SemiBold">
+                                <Run Text="Mark selected rows as read (" /><Run Text="{Binding SelectedTotal, Mode=OneWay}" /><Run Text=")" />
+                            </TextBlock>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Error: back to intro -->
+                    <Button Style="{StaticResource Button.Action}" Command="{Binding RunCommand}" Padding="18,8"
+                            Visibility="{Binding IsError, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="Try again" Foreground="{DynamicResource Brush.AccentForeground}" FontWeight="SemiBold" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

@@ -20,6 +20,16 @@ public interface IAiAgentService
     /// IncludeInHLOD) and flag anything that looks inconsistent with the actor's Outliner path or naming.
     /// </summary>
     Task<AiReportResult> GenerateAssignmentAnalysisAsync(SessionReport report, CancellationToken ct = default);
+
+    /// <summary>Run an arbitrary prompt through the agent and return the raw text output.</summary>
+    Task<AiReportResult> CompleteAsync(string prompt, CancellationToken ct = default);
+
+    /// <summary>
+    /// Run an arbitrary prompt and stream the agent's output as it arrives (one report call per line)
+    /// so the UI can show the reasoning live. The final <see cref="AiReportResult"/> still carries the
+    /// full accumulated text.
+    /// </summary>
+    Task<AiReportResult> CompleteStreamingAsync(string prompt, IProgress<string>? onOutput, CancellationToken ct = default);
 }
 
 /// <summary>Builds the deterministic prompt sent to the local Cursor agent.</summary>

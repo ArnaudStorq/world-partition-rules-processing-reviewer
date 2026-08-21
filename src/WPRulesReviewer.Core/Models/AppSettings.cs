@@ -30,6 +30,13 @@ public sealed class AppSettings
     public double SmartPanelWidth { get; set; } = 560;
     public double BottomPanelHeight { get; set; } = 360;
 
+    // ---- Persisted "Auto-resolve reading" window layout --------------------
+    public double AutoResolveWindowWidth { get; set; } = 1320;
+    public double AutoResolveWindowHeight { get; set; } = 960;
+    public double AutoResolveWindowLeft { get; set; } = double.NaN;
+    public double AutoResolveWindowTop { get; set; } = double.NaN;
+    public bool AutoResolveWindowMaximized { get; set; }
+
     // ---- Paths -------------------------------------------------------------
     public string DefaultEditorIniPath { get; set; } = @"D:\Sun\Sundance\Config\DefaultEditor.ini";
     public string LogDownloadFolder { get; set; } = string.Empty;   // empty => app data /Logs

@@ -59,6 +59,23 @@ public sealed class RuleRecord
     /// <summary>Last approval comment entered for this row (used to pre-fill the edit dialog).</summary>
     public string? ApprovalComment { get; set; }
 
+    /// <summary>
+    /// Transient UI note: when Auto-resolve reading examined this actor, related it to one or more
+    /// reports, but deliberately left the final call to the human (e.g. a suspicious report makes the
+    /// assignment ambiguous), this holds the AI's explanation. Empty when the AI never reasoned about
+    /// this actor (it matched no report at all).
+    /// </summary>
+    public string? AiReviewNote { get; set; }
+
+    /// <summary>Report ids the AI cited for <see cref="AiReviewNote"/> (for display in the AI Check dialog).</summary>
+    public IReadOnlyList<string> AiReviewReportIds { get; set; } = Array.Empty<string>();
+
+    /// <summary>The AI's confidence (1..5) attached to <see cref="AiReviewNote"/>.</summary>
+    public int AiReviewConfidence { get; set; }
+
+    /// <summary>True when the AI left a note asking the human to decide this actor's status.</summary>
+    public bool HasAiReviewNote => !string.IsNullOrWhiteSpace(AiReviewNote);
+
     /// <summary>Exact identity used for de-duplication of records within a session.</summary>
     public string Key => $"{Category}|{AssignmentType}|{WarningKind}|{ActorPath}|{ActorName}|{Value}";
 

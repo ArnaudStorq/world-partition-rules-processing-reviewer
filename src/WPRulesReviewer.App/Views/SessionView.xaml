@@ -524,6 +524,22 @@
                             </StackPanel>
                         </ToggleButton>
 
+                        <!-- Auto-resolve reading, placed right after the RuntimeGrid scope box -->
+                        <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                            <Border Width="1" Height="34" Background="{DynamicResource Brush.Border}" Margin="4,0,14,0"
+                                    VerticalAlignment="Center" />
+                            <Button Style="{StaticResource Button.Action}" Command="{Binding AutoResolveReadingCommand}"
+                                    Padding="24,14" FontSize="16" VerticalAlignment="Center"
+                                    ToolTip="Use AI to confront every unread applied assignment with your approved/suspicious reports and mark the resolved ones as read">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xEC61;" Style="{StaticResource Glyph}" FontSize="20" Margin="0,0,10,0"
+                                               Foreground="{DynamicResource Brush.AccentForeground}" />
+                                    <TextBlock Text="Auto-resolve reading" Foreground="{DynamicResource Brush.AccentForeground}"
+                                               FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
                         <!-- Read workflow -->
                         <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
                             <TextBlock VerticalAlignment="Center" Margin="0,0,14,0" Style="{StaticResource Text.Muted}">
@@ -708,6 +724,28 @@
 
                         <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="150" />
                         <DataGridTextColumn Header="Actor" Binding="{Binding DisplayActor}" Width="0.55*" MinWidth="200" />
+
+                        <DataGridTemplateColumn Header="AI check" Width="150" CanUserSort="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate DataType="{x:Type core:RuleRecord}">
+                                    <Button Cursor="Hand" Padding="8,4" BorderThickness="1"
+                                            BorderBrush="{DynamicResource Brush.Accent}" Background="Transparent"
+                                            HorizontalAlignment="Left" VerticalAlignment="Center"
+                                            Visibility="{Binding HasAiReviewNote, Converter={StaticResource BoolToVis}}"
+                                            Command="{Binding DataContext.ShowAiThoughtCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            ToolTip="{Binding AiReviewNote}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xEC61;" Style="{StaticResource Glyph}" FontSize="12"
+                                                       Foreground="{DynamicResource Brush.Accent}" Margin="0,0,6,0"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Text="AI review" FontSize="11.5" VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource Brush.Accent}" FontWeight="SemiBold" />
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
                         <DataGridTemplateColumn Header="Human check" Width="350" CanUserSort="False">
                             <DataGridTemplateColumn.CellTemplate>
