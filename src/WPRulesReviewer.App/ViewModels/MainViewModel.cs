@@ -329,6 +329,7 @@ public sealed partial class MainViewModel : ObservableObject
             report.TeamCityBuildId = (int)build.Id;
             report.BuildNumber = build.Number;
             report.WebUrl = build.WebUrl;
+            session.SetProcessingDate(build.StartDate);
         }
         session.SetReport(report);
         return session;

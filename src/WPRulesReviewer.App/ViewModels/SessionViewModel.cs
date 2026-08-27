@@ -98,6 +98,16 @@ public sealed partial class SessionViewModel : ObservableObject
     {
         _report = report;
         _sourceLines = null;
+
+        // Processing date shown as a badge on the tab. Prefer the TeamCity build's start date
+        // (matches the builds list on the left); fall back to the log timestamp for local files.
+        var dt = (_processingDateOverride ?? report.LogTime)?.LocalDateTime;
+        ProcessingDateLabel = dt.HasValue
+            ? dt.Value.ToString("d MMM yyyy", System.Globalization.CultureInfo.InvariantCulture)
+            : string.Empty;
+        OnPropertyChanged(nameof(ProcessingDateLabel));
+        OnPropertyChanged(nameof(HasProcessingDate));
+
         BuildValueFilters(report);
         _view = new ListCollectionView(report.Records) { Filter = FilterRecord };
         OnPropertyChanged(nameof(Records));
@@ -105,6 +115,21 @@ public sealed partial class SessionViewModel : ObservableObject
         RebuildPage();
         IsProcessing = false;
     }
+
+    /// <summary>TeamCity processing date for the tab badge (empty for local logs without a timestamp).</summary>
+    public string ProcessingDateLabel { get; private set; } = string.Empty;
+    public bool HasProcessingDate => !string.IsNullOrEmpty(ProcessingDateLabel);
+
+    private DateTimeOffset? _processingDateOverride;
+
+    /// <summary>Explicit processing date (the TeamCity build start date) used for the tab badge.</summary>
+    public void SetProcessingDate(DateTimeOffset? date) => _processingDateOverride = date;
+
+    /// <summary>
+    /// True once the user ran Auto-resolve reading and marked rows as read. The grid's "AI check"
+    /// column stays hidden until then, since AI notes only exist after that pass.
+    /// </summary>
+    [ObservableProperty] private bool _aiReviewApplied;
 
     public ICollectionView? Records => _view;
 
@@ -760,6 +785,10 @@ public sealed partial class SessionViewModel : ObservableObject
             Owner = System.Windows.Application.Current?.MainWindow
         };
         dialog.ShowDialog();
+
+        // Reveal the "AI check" column only once the user actually marked selected rows as read.
+        if (vm.AppliedCount > 0)
+            AiReviewApplied = true;
 
         // Refresh when rows were marked read, or when the AI attached "AI Check" notes to deferred rows.
         if (vm.AppliedCount > 0 || vm.DeferredCount > 0)

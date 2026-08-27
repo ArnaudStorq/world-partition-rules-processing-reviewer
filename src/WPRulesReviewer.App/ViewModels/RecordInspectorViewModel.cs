@@ -28,6 +28,11 @@ public sealed partial class RecordInspectorViewModel : ObservableObject
     [ObservableProperty] private string _title = "Details";
     [ObservableProperty] private bool _hasContent;
 
+    /// <summary>True when a record is shown and its actor name / outliner path can be copied.</summary>
+    [ObservableProperty] private bool _hasActor;
+
+    private RuleRecord? _current;
+
     private void Add(string text, bool header = false, bool match = false, bool mono = false)
         => Lines.Add(new InspectorLine { Text = text, IsHeader = header, IsMatch = match, IsMono = mono });
 
@@ -37,6 +42,25 @@ public sealed partial class RecordInspectorViewModel : ObservableObject
         Lines.Clear();
         Title = "Details";
         HasContent = false;
+        HasActor = false;
+        _current = null;
+    }
+
+    [RelayCommand]
+    private void CopyOutlinerPath()
+    {
+        var path = _current?.DisplayActor;
+        if (string.IsNullOrEmpty(path)) return;
+        try { Clipboard.SetText(path); } catch { /* clipboard busy */ }
+    }
+
+    [RelayCommand]
+    private void CopyActorName()
+    {
+        var name = _current?.ActorName;
+        if (string.IsNullOrEmpty(name)) name = _current?.DisplayActor;
+        if (string.IsNullOrEmpty(name)) return;
+        try { Clipboard.SetText(name); } catch { /* clipboard busy */ }
     }
 
     [RelayCommand]
@@ -52,6 +76,8 @@ public sealed partial class RecordInspectorViewModel : ObservableObject
     public void Show(RuleRecord r, string[]? sourceLines)
     {
         Lines.Clear();
+        _current = r;
+        HasActor = !string.IsNullOrEmpty(r.DisplayActor);
 
         var head = new StringBuilder();
         head.Append(r.CategoryLabel);

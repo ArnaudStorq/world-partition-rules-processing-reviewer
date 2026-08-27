@@ -83,10 +83,29 @@ public partial class SessionView : UserControl
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
-        if (_vm is not null) _vm.RecordRevealRequested -= OnRecordRevealRequested;
+        if (_vm is not null)
+        {
+            _vm.RecordRevealRequested -= OnRecordRevealRequested;
+            _vm.PropertyChanged -= OnVmPropertyChanged;
+        }
         _vm = e.NewValue as SessionViewModel;
-        if (_vm is not null) _vm.RecordRevealRequested += OnRecordRevealRequested;
+        if (_vm is not null)
+        {
+            _vm.RecordRevealRequested += OnRecordRevealRequested;
+            _vm.PropertyChanged += OnVmPropertyChanged;
+            UpdateAiCheckColumnVisibility();
+        }
     }
+
+    private void OnVmPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SessionViewModel.AiReviewApplied))
+            UpdateAiCheckColumnVisibility();
+    }
+
+    // The "AI check" column only appears once Auto-resolve reading has marked rows as read.
+    private void UpdateAiCheckColumnVisibility()
+        => AiCheckColumn.Visibility = _vm?.AiReviewApplied == true ? Visibility.Visible : Visibility.Collapsed;
 
     private void RecordsGrid_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {

@@ -362,6 +362,19 @@
                                         </TextBlock>
                                     </Grid>
                                     <TextBlock Text="{Binding Title}" VerticalAlignment="Center" />
+                                    <Border Background="{DynamicResource Brush.SurfaceAlt}" BorderBrush="{DynamicResource Brush.Border}"
+                                            BorderThickness="1" CornerRadius="8" Padding="7,1" Margin="8,0,0,0"
+                                            VerticalAlignment="Center"
+                                            ToolTip="TeamCity processing date"
+                                            Visibility="{Binding HasProcessingDate, Converter={StaticResource BoolToVis}}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE787;" Style="{StaticResource Glyph}" FontSize="10.5"
+                                                       Foreground="{DynamicResource Brush.Accent}" Margin="0,0,5,0"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding ProcessingDateLabel}" FontSize="10.5"
+                                                       Foreground="{DynamicResource Brush.TextSecondary}" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
                                     <TextBlock Text="processing..." Style="{StaticResource Text.Muted}" FontSize="11"
                                                VerticalAlignment="Center" Margin="8,0,0,0"
                                                Visibility="{Binding IsProcessing, Converter={StaticResource BoolToVis}}" />

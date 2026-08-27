@@ -681,7 +681,8 @@
                           SelectionChanged="RecordsGrid_OnSelectionChanged"
                           EnableRowVirtualization="True" EnableColumnVirtualization="True"
                           VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
-                          ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                          Visibility="{Binding ShowingCount, Converter={StaticResource CountToVis}}">
                     <DataGrid.Columns>
                         <DataGridTemplateColumn Header="Status" Width="140" CanUserSort="False">
                             <DataGridTemplateColumn.CellTemplate>
@@ -725,7 +726,8 @@
                         <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="150" />
                         <DataGridTextColumn Header="Actor" Binding="{Binding DisplayActor}" Width="0.55*" MinWidth="200" />
 
-                        <DataGridTemplateColumn Header="AI check" Width="150" CanUserSort="False">
+                        <DataGridTemplateColumn x:Name="AiCheckColumn" Header="AI check" Width="150"
+                                                CanUserSort="False" Visibility="Collapsed">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate DataType="{x:Type core:RuleRecord}">
                                     <Button Cursor="Hand" Padding="8,4" BorderThickness="1"
@@ -771,6 +773,17 @@
                         <DataGridTextColumn Header="Reason" Binding="{Binding StatusReason}" Width="0.3*" MinWidth="200" />
                     </DataGrid.Columns>
                     </DataGrid>
+
+                    <!-- Empty state: shown in place of the grid when the filters leave no row -->
+                    <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                Visibility="{Binding ShowingCount, Converter={StaticResource CountToVis}, ConverterParameter=invert}">
+                        <TextBlock Text="&#xE9CE;" Style="{StaticResource Glyph}" FontSize="42"
+                                   HorizontalAlignment="Center" Foreground="{DynamicResource Brush.TextMuted}" />
+                        <TextBlock Text="No data to display" Style="{StaticResource Text.Heading}"
+                                   HorizontalAlignment="Center" Margin="0,12,0,4" />
+                        <TextBlock Text="No row matches the current tab and filters."
+                                   Style="{StaticResource Text.Muted}" HorizontalAlignment="Center" TextAlignment="Center" />
+                    </StackPanel>
 
                     <!-- Pagination bar -->
                     <Border Grid.Row="1" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource Brush.Border}"

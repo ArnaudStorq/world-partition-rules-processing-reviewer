@@ -23,6 +23,22 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Style="{StaticResource Button.Subtle}" Command="{Binding CopyOutlinerPathCommand}"
+                            IsEnabled="{Binding HasActor}"
+                            ToolTip="Copy the actor's Outliner path to the clipboard">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8C8;" Style="{StaticResource Glyph}" FontSize="13" Margin="0,0,6,0" />
+                            <TextBlock Text="Copy path" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource Button.Subtle}" Command="{Binding CopyActorNameCommand}"
+                            IsEnabled="{Binding HasActor}"
+                            ToolTip="Copy the actor name to the clipboard">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8C8;" Style="{StaticResource Glyph}" FontSize="13" Margin="0,0,6,0" />
+                            <TextBlock Text="Copy name" />
+                        </StackPanel>
+                    </Button>
                     <Button Style="{StaticResource Button.Subtle}" Command="{Binding CopyAllCommand}"
                             ToolTip="Copy the selection details to the clipboard">
                         <StackPanel Orientation="Horizontal">
