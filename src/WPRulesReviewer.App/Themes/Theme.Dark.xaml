@@ -16,23 +16,40 @@
     <Color x:Key="Color.TextSecondary">#B7BCCE</Color>
     <Color x:Key="Color.TextMuted">#7C8298</Color>
 
-    <!-- Accent (overridden at runtime from settings) -->
-    <Color x:Key="Color.Accent">#2899F5</Color>
-    <Color x:Key="Color.AccentHover">#4CB1FF</Color>
+    <!-- Accent (overridden at runtime from settings; brand violet tuned for a dark surface) -->
+    <Color x:Key="Color.Accent">#7C6BFF</Color>
+    <Color x:Key="Color.AccentHover">#9587FF</Color>
     <Color x:Key="Color.AccentForeground">#FFFFFF</Color>
-    <Color x:Key="Color.Selection">#1E3A5F</Color>
+    <Color x:Key="Color.Selection">#2C2A57</Color>
 
-    <!-- Severity -->
-    <Color x:Key="Color.SevHigh">#F0616C</Color>
-    <Color x:Key="Color.SevMedium">#F0A94B</Color>
-    <Color x:Key="Color.SevLow">#E0C24B</Color>
-    <Color x:Key="Color.SevNone">#4CC98A</Color>
+    <!-- Brand: the icon gradient, reused by the title-bar mark and the primary-button sheen -->
+    <Color x:Key="Color.BrandFrom">#8C6CFF</Color>
+    <Color x:Key="Color.BrandTo">#4A37B5</Color>
+
+    <!-- Severity (slightly desaturated: these fill large areas in the charts) -->
+    <Color x:Key="Color.SevHigh">#E4606B</Color>
+    <Color x:Key="Color.SevMedium">#E39A45</Color>
+    <Color x:Key="Color.SevLow">#D4B443</Color>
+    <Color x:Key="Color.SevNone">#45C08A</Color>
 
     <!-- Status -->
-    <Color x:Key="Color.StatusAnomaly">#F0616C</Color>
-    <Color x:Key="Color.StatusNeedsReview">#F0A94B</Color>
-    <Color x:Key="Color.StatusExpected">#4CC98A</Color>
+    <Color x:Key="Color.StatusAnomaly">#E4606B</Color>
+    <Color x:Key="Color.StatusNeedsReview">#E39A45</Color>
+    <Color x:Key="Color.StatusExpected">#45C08A</Color>
     <Color x:Key="Color.StatusKnownNoise">#7C8298</Color>
+
+    <!-- Categorical chart ramp: one color per problem signature. Perceptually even, and distinct
+         from the severity family so an anomaly slice still reads as the dangerous one. -->
+    <Color x:Key="Color.Chart1">#7C6BFF</Color>
+    <Color x:Key="Color.Chart2">#4FA8F5</Color>
+    <Color x:Key="Color.Chart3">#3FC5C0</Color>
+    <Color x:Key="Color.Chart4">#5BC77E</Color>
+    <Color x:Key="Color.Chart5">#C9B84A</Color>
+    <Color x:Key="Color.Chart6">#E39A45</Color>
+    <Color x:Key="Color.Chart7">#DE7BA8</Color>
+    <Color x:Key="Color.Chart8">#9B7BE0</Color>
+    <Color x:Key="Color.ChartOther">#5C6278</Color>
+    <Color x:Key="Color.ChartTrack">#2A2F42</Color>
 
     <!-- Log levels -->
     <Color x:Key="Color.LevelError">#F0616C</Color>
@@ -56,6 +73,24 @@
     <SolidColorBrush x:Key="Brush.AccentHover" Color="{DynamicResource Color.AccentHover}" />
     <SolidColorBrush x:Key="Brush.AccentForeground" Color="{DynamicResource Color.AccentForeground}" />
     <SolidColorBrush x:Key="Brush.Selection" Color="{DynamicResource Color.Selection}" />
+    <!-- Window brush used when the Mica backdrop is active: mostly transparent so the material shows. -->
+    <SolidColorBrush x:Key="Brush.WindowBackdrop" Color="{DynamicResource Color.Window}" Opacity="0.55" />
+    <SolidColorBrush x:Key="Brush.BrandFrom" Color="{DynamicResource Color.BrandFrom}" />
+    <SolidColorBrush x:Key="Brush.BrandTo" Color="{DynamicResource Color.BrandTo}" />
+    <LinearGradientBrush x:Key="Brush.Brand" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{DynamicResource Color.BrandFrom}" Offset="0" />
+        <GradientStop Color="{DynamicResource Color.BrandTo}" Offset="1" />
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="Brush.Chart1" Color="{DynamicResource Color.Chart1}" />
+    <SolidColorBrush x:Key="Brush.Chart2" Color="{DynamicResource Color.Chart2}" />
+    <SolidColorBrush x:Key="Brush.Chart3" Color="{DynamicResource Color.Chart3}" />
+    <SolidColorBrush x:Key="Brush.Chart4" Color="{DynamicResource Color.Chart4}" />
+    <SolidColorBrush x:Key="Brush.Chart5" Color="{DynamicResource Color.Chart5}" />
+    <SolidColorBrush x:Key="Brush.Chart6" Color="{DynamicResource Color.Chart6}" />
+    <SolidColorBrush x:Key="Brush.Chart7" Color="{DynamicResource Color.Chart7}" />
+    <SolidColorBrush x:Key="Brush.Chart8" Color="{DynamicResource Color.Chart8}" />
+    <SolidColorBrush x:Key="Brush.ChartOther" Color="{DynamicResource Color.ChartOther}" />
+    <SolidColorBrush x:Key="Brush.ChartTrack" Color="{DynamicResource Color.ChartTrack}" />
     <SolidColorBrush x:Key="Brush.SevHigh" Color="{DynamicResource Color.SevHigh}" />
     <SolidColorBrush x:Key="Brush.SevMedium" Color="{DynamicResource Color.SevMedium}" />
     <SolidColorBrush x:Key="Brush.SevLow" Color="{DynamicResource Color.SevLow}" />

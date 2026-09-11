@@ -123,10 +123,9 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- Left: app icon -->
-                    <Image Grid.Column="0" Source="pack://application:,,,/Assets/app.ico"
-                           Width="24" Height="24" Margin="16,0,0,0" VerticalAlignment="Center"
-                           RenderOptions.BitmapScalingMode="HighQuality" />
+                    <!-- Left: brand mark (vector, so it stays crisp at any DPI) -->
+                    <Image Grid.Column="0" Source="{StaticResource Brand.Mark}"
+                           Width="26" Height="26" Margin="16,0,0,0" VerticalAlignment="Center" />
 
                     <!-- Centered application title (transparent to hit-testing so the bar stays draggable) -->
                     <TextBlock Grid.ColumnSpan="3" Text="WORLD PARTITION RULES PROCESSING REVIEWER"

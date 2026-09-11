@@ -1,0 +1,55 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Vector version of the app mark: a 3x3 partition grid with one lit cell.
+        Used wherever the icon must stay crisp and tintable (title bar, about, splash);
+        Assets/app.ico remains the raster version for the shell and the taskbar.
+        Coordinate space is 24x24 to match the Segoe MDL2 glyph metrics around it.
+    -->
+    <DrawingImage x:Key="Brand.Mark">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <DrawingGroup.Children>
+
+                    <!-- Rounded-square plate with the brand gradient -->
+                    <GeometryDrawing>
+                        <GeometryDrawing.Brush>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#8C6CFF" Offset="0" />
+                                <GradientStop Color="#4A37B5" Offset="1" />
+                            </LinearGradientBrush>
+                        </GeometryDrawing.Brush>
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="0,0,24,24" RadiusX="5.5" RadiusY="5.5" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+
+                    <!-- Eight dimmed cells -->
+                    <GeometryDrawing Brush="#96FFFFFF">
+                        <GeometryDrawing.Geometry>
+                            <GeometryGroup>
+                                <RectangleGeometry Rect="6,6,3.4,3.4"     RadiusX="1" RadiusY="1" />
+                                <RectangleGeometry Rect="10.3,6,3.4,3.4"  RadiusX="1" RadiusY="1" />
+                                <RectangleGeometry Rect="14.6,6,3.4,3.4"  RadiusX="1" RadiusY="1" />
+                                <RectangleGeometry Rect="6,10.3,3.4,3.4"  RadiusX="1" RadiusY="1" />
+                                <RectangleGeometry Rect="10.3,10.3,3.4,3.4" RadiusX="1" RadiusY="1" />
+                                <RectangleGeometry Rect="6,14.6,3.4,3.4"  RadiusX="1" RadiusY="1" />
+                                <RectangleGeometry Rect="10.3,14.6,3.4,3.4" RadiusX="1" RadiusY="1" />
+                                <RectangleGeometry Rect="14.6,14.6,3.4,3.4" RadiusX="1" RadiusY="1" />
+                            </GeometryGroup>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+
+                    <!-- The one cell under review -->
+                    <GeometryDrawing Brush="#FFFFFFFF">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="14.6,10.3,3.4,3.4" RadiusX="1" RadiusY="1" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+
+                </DrawingGroup.Children>
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+</ResourceDictionary>

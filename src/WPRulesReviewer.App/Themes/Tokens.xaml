@@ -1,0 +1,73 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!--
+        Design tokens shared by every view. Nothing here depends on the active theme: colors live in
+        Theme.Light.xaml / Theme.Dark.xaml, geometry and motion live here.
+        Rule: no magic number in a view. If a value is needed twice, it becomes a token.
+    -->
+
+    <!-- ======================= Spacing scale (4 / 8 / 12 / 16 / 24 / 32) ======================= -->
+    <sys:Double x:Key="Space.XS">4</sys:Double>
+    <sys:Double x:Key="Space.S">8</sys:Double>
+    <sys:Double x:Key="Space.M">12</sys:Double>
+    <sys:Double x:Key="Space.L">16</sys:Double>
+    <sys:Double x:Key="Space.XL">24</sys:Double>
+    <sys:Double x:Key="Space.XXL">32</sys:Double>
+
+    <Thickness x:Key="Pad.Card">16</Thickness>
+    <Thickness x:Key="Pad.CardCompact">12</Thickness>
+    <Thickness x:Key="Pad.Row">12,8</Thickness>
+    <Thickness x:Key="Pad.Control">12,7</Thickness>
+    <Thickness x:Key="Pad.Section">16,12</Thickness>
+    <Thickness x:Key="Margin.StackS">0,0,0,8</Thickness>
+    <Thickness x:Key="Margin.StackM">0,0,0,12</Thickness>
+    <Thickness x:Key="Margin.InlineS">0,0,8,0</Thickness>
+    <Thickness x:Key="Margin.InlineM">0,0,12,0</Thickness>
+
+    <!-- ======================= Radii ======================= -->
+    <CornerRadius x:Key="Radius.Control">6</CornerRadius>
+    <CornerRadius x:Key="Radius.Card">10</CornerRadius>
+    <CornerRadius x:Key="Radius.Dialog">14</CornerRadius>
+    <CornerRadius x:Key="Radius.Pill">999</CornerRadius>
+
+    <!-- ======================= Typography ramp =======================
+         Segoe UI Variable Display on Windows 11, Segoe UI elsewhere (WPF picks the first that exists). -->
+    <FontFamily x:Key="Font.Ui">Segoe UI Variable Text, Segoe UI</FontFamily>
+    <FontFamily x:Key="Font.Display">Segoe UI Variable Display, Segoe UI</FontFamily>
+    <FontFamily x:Key="Font.Mono">Cascadia Mono, Consolas</FontFamily>
+
+    <sys:Double x:Key="FontSize.Display">24</sys:Double>
+    <sys:Double x:Key="FontSize.TitleRamp">18</sys:Double>
+    <sys:Double x:Key="FontSize.Heading">14</sys:Double>
+    <sys:Double x:Key="FontSize.Body">13</sys:Double>
+    <sys:Double x:Key="FontSize.Caption">11</sys:Double>
+
+    <!-- ======================= Motion =======================
+         Fast, EaseOut, never linear. ReduceMotion in Settings short-circuits the storyboards. -->
+    <Duration x:Key="Duration.Fast">0:0:0.12</Duration>
+    <Duration x:Key="Duration.Normal">0:0:0.18</Duration>
+    <Duration x:Key="Duration.Slow">0:0:0.26</Duration>
+
+    <CubicEase x:Key="Ease.Out" EasingMode="EaseOut" />
+    <QuinticEase x:Key="Ease.OutStrong" EasingMode="EaseOut" />
+    <BackEase x:Key="Ease.OutBack" EasingMode="EaseOut" Amplitude="0.35" />
+
+    <!-- Reusable entrance: fade + 8px rise. Applied to panels and cards, never to virtualized rows. -->
+    <Storyboard x:Key="Anim.FadeInUp">
+        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1"
+                         Duration="{StaticResource Duration.Normal}" EasingFunction="{StaticResource Ease.Out}" />
+        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                         From="8" To="0"
+                         Duration="{StaticResource Duration.Normal}" EasingFunction="{StaticResource Ease.Out}" />
+    </Storyboard>
+
+    <!-- ======================= Elevation =======================
+         Software-rendered per frame in WPF: use on static chrome only (cards, dialogs, popups),
+         never inside a virtualized item template. -->
+    <DropShadowEffect x:Key="Elevation.1" BlurRadius="10" ShadowDepth="1" Direction="270" Opacity="0.14" Color="#000000" />
+    <DropShadowEffect x:Key="Elevation.2" BlurRadius="22" ShadowDepth="3" Direction="270" Opacity="0.20" Color="#000000" />
+    <DropShadowEffect x:Key="Elevation.3" BlurRadius="42" ShadowDepth="8" Direction="270" Opacity="0.28" Color="#000000" />
+
+</ResourceDictionary>

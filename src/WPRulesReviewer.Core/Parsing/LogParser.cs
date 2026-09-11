@@ -36,6 +36,12 @@ public sealed partial class LogParser
     private static partial Regex MissingDataLayer();
     [GeneratedRegex(@"Actor '([^']+)' matches multiple (HLODLayer|RuntimeGrid|DataLayer) rules \((\d+)\): \[([^\]]*)\]")]
     private static partial Regex MultipleRules();
+    [GeneratedRegex(@"Actor '([^']+)' is assigned to runtime DataLayer '([^']*)' but no DataLayer rule targets it")]
+    private static partial Regex UntargetedRuntimeDataLayer();
+
+    /// <summary>Last-resort actor extraction for warning shapes we do not model explicitly yet.</summary>
+    [GeneratedRegex(@"\b[Aa]ctor '([^']+)'")]
+    private static partial Regex AnyActor();
 
     // Skipped / progress
     [GeneratedRegex(@"Skipping rule application for actor \[([^\]]+)\]: (.+?)\s*$")]
@@ -257,18 +263,46 @@ public sealed partial class LogParser
             AttachContext(rec, contextPath);
             return rec;
         }
+        if ((m = UntargetedRuntimeDataLayer().Match(line)).Success)
+        {
+            var rec = new RuleRecord
+            {
+                LineNumber = (int)lineNo,
+                Timestamp = TryParseLineTime(line),
+                Category = RecordCategory.Warning,
+                AssignmentType = AssignmentType.DataLayer,
+                WarningKind = WarningKind.UntargetedRuntimeDataLayer,
+                ActorPath = m.Groups[1].Value,
+                ActorName = LeafOf(m.Groups[1].Value),
+                Value = m.Groups[2].Value,
+                Reason = StripPrefix(line),
+                RawLine = line
+            };
+            AttachContext(rec, contextPath);
+            return rec;
+        }
+
         // Generic rule warning we still want to surface.
         if (line.Contains("LogWorldPartitionRules: Warning:", StringComparison.Ordinal))
         {
-            return new RuleRecord
+            // Even when the shape is unknown, the actor is what makes the row actionable, so pull the
+            // first quoted actor out of the message rather than showing an anonymous warning.
+            var actor = AnyActor().Match(line);
+            var path = actor.Success ? actor.Groups[1].Value : string.Empty;
+
+            var rec = new RuleRecord
             {
                 LineNumber = (int)lineNo,
                 Timestamp = TryParseLineTime(line),
                 Category = RecordCategory.Warning,
                 WarningKind = WarningKind.Other,
+                ActorPath = path,
+                ActorName = path.Length == 0 ? string.Empty : LeafOf(path),
                 Reason = StripPrefix(line),
                 RawLine = line
             };
+            AttachContext(rec, contextPath);
+            return rec;
         }
         return null;
     }

@@ -81,6 +81,28 @@ public sealed class RuleRecord
 
     public string DisplayActor => string.IsNullOrEmpty(ActorPath) ? ActorName : ActorPath;
 
+    /// <summary>
+    /// Verbosity Unreal wrote the line with, read back from the raw line. Falls back to the parsed
+    /// category for records built without a raw line (progress entries, tests).
+    /// </summary>
+    public LogVerbosity Verbosity
+    {
+        get
+        {
+            if (RawLine.Contains(": Error:", StringComparison.Ordinal)) return LogVerbosity.Error;
+            if (RawLine.Contains(": Warning:", StringComparison.Ordinal)) return LogVerbosity.Warning;
+            if (RawLine.Contains(": Verbose:", StringComparison.Ordinal) ||
+                RawLine.Contains(": VeryVerbose:", StringComparison.Ordinal)) return LogVerbosity.Verbose;
+
+            return Category switch
+            {
+                RecordCategory.Error or RecordCategory.ImportError => LogVerbosity.Error,
+                RecordCategory.Warning => LogVerbosity.Warning,
+                _ => LogVerbosity.Log
+            };
+        }
+    }
+
     /// <summary>Full, human-readable context for the grid tooltip.</summary>
     public string DetailTooltip
     {

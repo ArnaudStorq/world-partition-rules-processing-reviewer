@@ -25,6 +25,22 @@ public enum AssignmentType
     IncludeInHLOD
 }
 
+/// <summary>
+/// Unreal log verbosity the line was written with. This is the taxonomy an engine programmer reads
+/// the log with, so it is the default top level of the Warning Explorer.
+/// </summary>
+public enum LogVerbosity
+{
+    Error,
+    Warning,
+
+    /// <summary>Display and Log lines: the normal, expected output of the rule pass.</summary>
+    Log,
+
+    /// <summary>Verbose and VeryVerbose lines: per-actor tracing.</summary>
+    Verbose
+}
+
 /// <summary>Sub type of a warning line, used to drive triage.</summary>
 public enum WarningKind
 {
@@ -34,6 +50,8 @@ public enum WarningKind
     MultipleHLODLayerRules,
     MultipleRuntimeGridRules,
     MultipleDataLayerRules,
+    /// <summary>Actor carries a runtime DataLayer that no rule asked for: an extra streaming cell.</summary>
+    UntargetedRuntimeDataLayer,
     Other
 }
 

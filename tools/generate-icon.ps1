@@ -32,37 +32,46 @@ function New-IconBitmap([int]$s) {
     $brush = New-Object System.Drawing.Drawing2D.LinearGradientBrush($rectF, $c1, $c2, 55.0)
     $g.FillPath($brush, $path)
 
-    # Magnifying glass = review lens.
+    # Mark: the partition grid itself. A 3x3 of rounded cells with one cell lit, which stays
+    # readable at 16 px where a lens + handle + check mark turns to mush.
     $white = [System.Drawing.Color]::FromArgb(255, 255, 255, 255)
-    $penW = [single]([Math]::Max(1.0, $s * 0.075))
-    $pen = New-Object System.Drawing.Pen($white, $penW)
-    $pen.StartCap = 'Round'; $pen.EndCap = 'Round'
+    $dim = [System.Drawing.Color]::FromArgb(150, 255, 255, 255)
 
-    $lensD = [single]($s * 0.42)
-    $lensX = [single]($s * 0.24)
-    $lensY = [single]($s * 0.22)
-    $g.DrawEllipse($pen, $lensX, $lensY, $lensD, $lensD)
+    $gridSpan = [single]($s * 0.50)
+    $gridX = [single](($s - $gridSpan) / 2.0)
+    $gridY = [single](($s - $gridSpan) / 2.0)
+    $gap = [single]($gridSpan * 0.14)
+    $cell = [single](($gridSpan - 2 * $gap) / 3.0)
+    $cellRadius = [single]([Math]::Max(0.6, $cell * 0.26))
 
-    # Handle.
-    $hx1 = [single]($lensX + $lensD * 0.86)
-    $hy1 = [single]($lensY + $lensD * 0.86)
-    $hx2 = [single]($s * 0.80)
-    $hy2 = [single]($s * 0.80)
-    $g.DrawLine($pen, $hx1, $hy1, $hx2, $hy2)
+    # The lit cell is off-centre (row 1, column 2): it reads as "one partition under review".
+    $litRow = 1
+    $litCol = 2
 
-    # Check mark inside the lens = "reviewed / ok".
-    if ($s -ge 24) {
-        $penC = New-Object System.Drawing.Pen($white, [single]([Math]::Max(1.0, $s * 0.06)))
-        $penC.StartCap = 'Round'; $penC.EndCap = 'Round'; $penC.LineJoin = 'Round'
-        $cx = $lensX + $lensD / 2.0
-        $cy = $lensY + $lensD / 2.0
-        $pts = @(
-            (New-Object System.Drawing.PointF([single]($cx - $lensD * 0.22), [single]($cy + $lensD * 0.02))),
-            (New-Object System.Drawing.PointF([single]($cx - $lensD * 0.05), [single]($cy + $lensD * 0.18))),
-            (New-Object System.Drawing.PointF([single]($cx + $lensD * 0.26), [single]($cy - $lensD * 0.20)))
-        )
-        $g.DrawLines($penC, $pts)
-        $penC.Dispose()
+    for ($row = 0; $row -lt 3; $row++) {
+        for ($col = 0; $col -lt 3; $col++) {
+            $x = [single]($gridX + $col * ($cell + $gap))
+            $y = [single]($gridY + $row * ($cell + $gap))
+
+            $cellPath = New-Object System.Drawing.Drawing2D.GraphicsPath
+            $cd = $cellRadius * 2
+            if ($cd -ge 1.0) {
+                $cellPath.AddArc($x, $y, $cd, $cd, 180, 90)
+                $cellPath.AddArc($x + $cell - $cd, $y, $cd, $cd, 270, 90)
+                $cellPath.AddArc($x + $cell - $cd, $y + $cell - $cd, $cd, $cd, 0, 90)
+                $cellPath.AddArc($x, $y + $cell - $cd, $cd, $cd, 90, 90)
+                $cellPath.CloseFigure()
+            }
+            else {
+                $cellPath.AddRectangle((New-Object System.Drawing.RectangleF($x, $y, $cell, $cell)))
+            }
+
+            $isLit = ($row -eq $litRow -and $col -eq $litCol)
+            $cellBrush = New-Object System.Drawing.SolidBrush($(if ($isLit) { $white } else { $dim }))
+            $g.FillPath($cellBrush, $cellPath)
+            $cellBrush.Dispose()
+            $cellPath.Dispose()
+        }
     }
 
     $g.Dispose()

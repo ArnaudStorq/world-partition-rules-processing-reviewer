@@ -24,6 +24,8 @@ public partial class App : Application
             settings.LogToFile ? AppPaths.ActivityLogFile : null,
             settings.VerboseLogging);
 
+        Motion.IsEnabled = !settings.ReduceMotion;
+
         var theme = new ThemeManager();
         theme.Apply(settings.Theme, settings.AccentColor);
 

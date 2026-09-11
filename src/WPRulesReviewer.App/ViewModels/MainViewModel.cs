@@ -48,8 +48,11 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Show/hide the per-session Smart Analysis side panel across all open tabs.</summary>
     [ObservableProperty] private bool _showSmartAnalysis = true;
 
-    /// <summary>Show/hide the bottom Activity Log / inspector panel.</summary>
-    [ObservableProperty] private bool _showActivityLog = true;
+    /// <summary>
+    /// Show/hide the bottom Activity Log / inspector panel. Collapsed by default: it is a
+    /// troubleshooting surface, and the review work belongs to the grid above it.
+    /// </summary>
+    [ObservableProperty] private bool _showActivityLog;
 
     public string SmartAnalysisToggleLabel => ShowSmartAnalysis ? "Hide Smart Analysis" : "Show Smart Analysis";
     /// <summary>Chevron on the Smart Analysis handle: right to hide (collapse right), left to show.</summary>
@@ -103,6 +106,11 @@ public sealed partial class MainViewModel : ObservableObject
         _settingsService = settingsService;
         _log = log;
         _theme = theme;
+        // Charts cache their colors as Skia paints, so they have to be rebuilt on a palette swap.
+        _theme.ThemeChanged += () =>
+        {
+            foreach (var session in Sessions) session.Overview.Rebuild();
+        };
         _pipeline = new ReviewPipeline(settings, log);
         _ai = new CursorAgentService(settings, log);
 

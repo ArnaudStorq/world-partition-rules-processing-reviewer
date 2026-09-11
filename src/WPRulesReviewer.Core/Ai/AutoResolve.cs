@@ -49,27 +49,11 @@ public sealed class AutoResolveGroup
 }
 
 /// <summary>
-/// A deterministic match rule produced by the AI. Every non-empty condition must hold (logical AND);
-/// an empty rule matches nothing (safety). The tool evaluates it against all candidates.
+/// A deterministic match rule produced by the AI, addressing auto-resolve candidates.
+/// The conditions and their evaluation live in <see cref="MatchRule"/>, shared with the Fix Advisor.
 /// </summary>
-public sealed class AutoResolveMatch
+public sealed class AutoResolveMatch : MatchRule
 {
-    public string? AssignmentType { get; init; }
-    public string? Value { get; init; }
-    public string? ValueRegex { get; init; }
-    public string? ActorNamePrefix { get; init; }
-    public string? ActorNameContains { get; init; }
-    public string? ActorPathContains { get; init; }
-    public string? ActorPathRegex { get; init; }
-
-    public bool HasAnyCondition =>
-        !string.IsNullOrWhiteSpace(AssignmentType) ||
-        !string.IsNullOrWhiteSpace(Value) ||
-        !string.IsNullOrWhiteSpace(ValueRegex) ||
-        !string.IsNullOrWhiteSpace(ActorNamePrefix) ||
-        !string.IsNullOrWhiteSpace(ActorNameContains) ||
-        !string.IsNullOrWhiteSpace(ActorPathContains) ||
-        !string.IsNullOrWhiteSpace(ActorPathRegex);
 }
 
 /// <summary>Applies an <see cref="AutoResolveMatch"/> rule to candidate rows.</summary>
@@ -80,53 +64,8 @@ public static class AutoResolveMatcher
         var result = new List<int>();
         if (rule is null || !rule.HasAnyCondition) return result;
         foreach (var c in candidates)
-            if (Matches(rule, c)) result.Add(c.Index);
+            if (MatchRuleEvaluator.Matches(rule, c.AssignmentType, c.Value, c.ActorPath)) result.Add(c.Index);
         return result;
-    }
-
-    private static bool Matches(AutoResolveMatch r, AutoResolveCandidate c)
-    {
-        if (!string.IsNullOrWhiteSpace(r.AssignmentType) &&
-            !string.Equals(c.AssignmentType, r.AssignmentType, StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        if (!string.IsNullOrWhiteSpace(r.Value) &&
-            !string.Equals(c.Value, r.Value, StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        if (!string.IsNullOrWhiteSpace(r.ValueRegex) && !RegexOk(r.ValueRegex!, c.Value))
-            return false;
-
-        var leaf = LeafName(c.ActorPath);
-        if (!string.IsNullOrWhiteSpace(r.ActorNamePrefix) &&
-            !leaf.StartsWith(r.ActorNamePrefix!, StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        if (!string.IsNullOrWhiteSpace(r.ActorNameContains) &&
-            leaf.IndexOf(r.ActorNameContains!, StringComparison.OrdinalIgnoreCase) < 0)
-            return false;
-
-        if (!string.IsNullOrWhiteSpace(r.ActorPathContains) &&
-            c.ActorPath.IndexOf(r.ActorPathContains!, StringComparison.OrdinalIgnoreCase) < 0)
-            return false;
-
-        if (!string.IsNullOrWhiteSpace(r.ActorPathRegex) && !RegexOk(r.ActorPathRegex!, c.ActorPath))
-            return false;
-
-        return true;
-    }
-
-    private static string LeafName(string path)
-    {
-        if (string.IsNullOrEmpty(path)) return string.Empty;
-        int i = path.LastIndexOf('/');
-        return i >= 0 && i < path.Length - 1 ? path[(i + 1)..] : path;
-    }
-
-    private static bool RegexOk(string pattern, string input)
-    {
-        try { return System.Text.RegularExpressions.Regex.IsMatch(input, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase); }
-        catch { return false; } // invalid AI regex never matches (conservative)
     }
 }
 

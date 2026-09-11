@@ -8,12 +8,24 @@ public sealed class AppSettings
 {
     // ---- Appearance --------------------------------------------------------
     public AppTheme Theme { get; set; } = AppTheme.System;
-    public string AccentColor { get; set; } = "#6D5AE0";
+
+    /// <summary>Brand violet. Empty means "follow the theme's own accent".</summary>
+    public string AccentColor { get; set; } = string.Empty;
+
     public double UiFontScale { get; set; } = 1.0;
     public bool CompactRows { get; set; }
-    public bool ShowGridLines { get; set; } = true;
+    public bool ShowGridLines { get; set; }
     /// <summary>Number of rows shown per page in the results grid.</summary>
     public int ItemsPerPage { get; set; } = 100;
+
+    /// <summary>Disables every entrance/transition storyboard (accessibility, remote sessions).</summary>
+    public bool ReduceMotion { get; set; }
+
+    /// <summary>
+    /// Opt into the Windows 11 Mica backdrop; ignored on Windows 10. Off by default because it
+    /// makes the window background translucent, which is a taste call.
+    /// </summary>
+    public bool UseMicaBackdrop { get; set; }
 
     // ---- Window ------------------------------------------------------------
     public bool StartMinimized { get; set; }
@@ -29,6 +41,14 @@ public sealed class AppSettings
     public double BuildsPanelWidth { get; set; } = 400;
     public double SmartPanelWidth { get; set; } = 560;
     public double BottomPanelHeight { get; set; } = 360;
+    public double ExplorerPanelWidth { get; set; } = 320;
+
+    // ---- Warning Explorer / charts ----------------------------------------
+    /// <summary>Name of the default <c>InsightPreset</c> used by the Warning Explorer.</summary>
+    public string ExplorerDefaultPreset { get; set; } = "By problem";
+
+    /// <summary>How many slices the donut shows before collapsing the tail into "Other".</summary>
+    public int ChartTopSlices { get; set; } = 8;
 
     // ---- Persisted "Auto-resolve reading" window layout --------------------
     public double AutoResolveWindowWidth { get; set; } = 1320;
@@ -89,6 +109,12 @@ public sealed class AppSettings
     public int AiMaxAnomalies { get; set; } = 120;
     public int AiTimeoutSeconds { get; set; } = 180;
     public string AiExtraInstructions { get; set; } = string.Empty;
+
+    /// <summary>Enables the Fix Advisor tab (AI recommendations and applied fixes).</summary>
+    public bool EnableFixAdvisor { get; set; } = true;
+
+    /// <summary>Highest risk level the Fix Advisor may apply without a per-row confirmation.</summary>
+    public string FixAdvisorAutoApplyMaxRisk { get; set; } = "Low";
 
     // ---- Performance -------------------------------------------------------
     public int MaxParallelSessions { get; set; } = Math.Max(2, Environment.ProcessorCount / 2);

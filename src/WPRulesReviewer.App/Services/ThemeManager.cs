@@ -16,6 +16,12 @@ public sealed class ThemeManager
     public AppTheme Current { get; private set; } = AppTheme.System;
     public bool IsDarkEffective { get; private set; }
 
+    /// <summary>
+    /// Raised after the palette swap. Anything that caches colors outside the resource system
+    /// (the Skia chart paints, the radial control geometry) has to repaint on this.
+    /// </summary>
+    public event Action? ThemeChanged;
+
     public void Apply(AppTheme theme, string accentHex)
     {
         Current = theme;
@@ -55,6 +61,7 @@ public sealed class ThemeManager
         _palette = newPalette;
 
         ApplyAccent(accentHex);
+        ThemeChanged?.Invoke();
     }
 
     public void ApplyAccent(string accentHex)

@@ -1,0 +1,66 @@
+<UserControl x:Class="WPRulesReviewer.App.Views.BreakdownPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:WPRulesReviewer.App.ViewModels"
+             xmlns:ctl="clr-namespace:WPRulesReviewer.App.Controls"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:svc="clr-namespace:WPRulesReviewer.App.Services"
+             d:DataContext="{d:DesignInstance vm:WarningExplorerViewModel}"
+             svc:Motion.FadeIn="True"
+             mc:Ignorable="d">
+
+    <Grid Margin="0,8,0,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar: focus breadcrumb and ring depth -->
+        <Grid Grid.Row="0" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="BackButton" Style="{StaticResource Button.Subtle}" Padding="8,5" Margin="0,0,8,0"
+                        Click="Back_OnClick" Visibility="Collapsed" ToolTip="Back to the whole session">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE72B;" Style="{StaticResource Glyph}" FontSize="12" Margin="0,0,6,0"
+                                   Foreground="{DynamicResource Brush.TextMuted}" />
+                        <TextBlock x:Name="FocusLabel" Text="All" />
+                    </StackPanel>
+                </Button>
+                <TextBlock Text="Double-click a slice to zoom in, single-click to filter the grid."
+                           Style="{StaticResource Text.Muted}" VerticalAlignment="Center" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock Text="Rings" Style="{StaticResource Text.Muted}" VerticalAlignment="Center"
+                           Margin="0,0,8,0" />
+                <Slider x:Name="DepthSlider" Width="90" Minimum="1" Maximum="5" Value="3"
+                        TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Value, ElementName=DepthSlider, StringFormat='{}{0:0}'}"
+                           Style="{StaticResource Text.Muted}" VerticalAlignment="Center" Margin="8,0,0,0" />
+            </StackPanel>
+        </Grid>
+
+        <TextBlock Grid.Row="1" Style="{StaticResource Text.Muted}" TextWrapping="Wrap" Margin="0,0,0,8"
+                   Text="Ring 1 is the top grouping level of the Explorer preset; each outer ring is the level below."/>
+
+        <Border Grid.Row="2" Background="{DynamicResource Brush.SurfaceAlt}"
+                CornerRadius="{StaticResource Radius.Card}" Padding="8">
+            <Grid>
+                <StackPanel VerticalAlignment="Center"
+                            Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="&#xE9D9;" Style="{StaticResource Glyph}" FontSize="30" HorizontalAlignment="Center"
+                               Foreground="{DynamicResource Brush.TextMuted}" />
+                    <TextBlock Text="Nothing to map" Style="{StaticResource Text.Heading}"
+                               HorizontalAlignment="Center" Margin="0,10,0,0" />
+                </StackPanel>
+
+                <ctl:RadialInsightControl x:Name="Radial" MinHeight="360"
+                                          Roots="{Binding Roots}"
+                                          MaxDepth="{Binding Value, ElementName=DepthSlider, Converter={StaticResource DoubleToInt}}"
+                                          Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}, ConverterParameter=invert}" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

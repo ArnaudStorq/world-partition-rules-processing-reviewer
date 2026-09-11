@@ -122,6 +122,10 @@ public sealed class OracleEvaluator
                 else
                     Set(r, ReviewStatus.NeedsReview, AnomalySeverity.Low, "Actor matched no DataLayer rule");
                 break;
+            case WarningKind.UntargetedRuntimeDataLayer:
+                Set(r, ReviewStatus.NeedsReview, AnomalySeverity.Low,
+                    $"Runtime DataLayer '{r.Value}' assigned to the actor but targeted by no rule");
+                break;
             default:
                 Set(r, ReviewStatus.NeedsReview, AnomalySeverity.Low, "Rule warning");
                 break;

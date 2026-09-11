@@ -46,8 +46,29 @@ public partial class MainWindow : Window
         ApplyLayout(vm);
         SetLogPanelVisible(vm.ShowActivityLog);
 
+        ApplyBackdrop(vm);
+
         if (vm.Settings.AutoRefreshOnStartup && vm.RefreshBuildsCommand.CanExecute(null))
             await vm.RefreshBuildsCommand.ExecuteAsync(null);
+    }
+
+    /// <summary>
+    /// Mica only shows through a transparent window background, so the two go together: if the
+    /// platform refuses the backdrop, the solid window brush is kept.
+    /// </summary>
+    private void ApplyBackdrop(MainViewModel vm)
+    {
+        if (!vm.Settings.UseMicaBackdrop) return;
+
+        var dark = vm.Settings.Theme switch
+        {
+            AppTheme.Dark => true,
+            AppTheme.Light => false,
+            _ => Services.ThemeManager.IsSystemDark()
+        };
+
+        if (Services.WindowBackdrop.TryApplyMica(this, dark))
+            SetResourceReference(BackgroundProperty, "Brush.WindowBackdrop");
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)

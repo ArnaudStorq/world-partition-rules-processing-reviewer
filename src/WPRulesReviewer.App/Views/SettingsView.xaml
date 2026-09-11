@@ -79,7 +79,9 @@
                             <TextBlock Text="Accent color (hex)" Style="{StaticResource RowLabel}" DockPanel.Dock="Left" />
                             <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                                 <Border Width="24" Height="24" CornerRadius="6" Margin="0,0,8,0"
-                                        Background="{Binding Model.AccentColor}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1" />
+                                        Background="{Binding Model.AccentColor, Converter={StaticResource HexToBrush}}"
+                                        BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1"
+                                        ToolTip="Leave empty to follow the theme's own accent" />
                                 <TextBox Width="120" Text="{Binding Model.AccentColor}" />
                                 <Button Content="Apply" Style="{StaticResource Button.Subtle}" Command="{Binding ApplyThemeCommand}" />
                             </StackPanel>
@@ -99,6 +101,20 @@
                         <DockPanel Style="{StaticResource Row}">
                             <TextBlock Text="Show grid lines" Style="{StaticResource RowLabel}" DockPanel.Dock="Left" />
                             <ToggleButton Style="{StaticResource Switch}" DockPanel.Dock="Right" IsChecked="{Binding Model.ShowGridLines}" />
+                        </DockPanel>
+                        <DockPanel Style="{StaticResource Row}">
+                            <TextBlock Text="Reduce motion" Style="{StaticResource RowLabel}" DockPanel.Dock="Left"
+                                       ToolTip="Disables entrance and transition animations" />
+                            <ToggleButton Style="{StaticResource Switch}" DockPanel.Dock="Right" IsChecked="{Binding Model.ReduceMotion}" />
+                        </DockPanel>
+                        <DockPanel Style="{StaticResource Row}">
+                            <TextBlock Text="Mica backdrop (Windows 11)" Style="{StaticResource RowLabel}" DockPanel.Dock="Left"
+                                       ToolTip="Translucent window material. Applied on the next application start." />
+                            <ToggleButton Style="{StaticResource Switch}" DockPanel.Dock="Right" IsChecked="{Binding Model.UseMicaBackdrop}" />
+                        </DockPanel>
+                        <DockPanel Style="{StaticResource Row}">
+                            <TextBlock Text="Donut slices before &quot;Other&quot;" Style="{StaticResource RowLabel}" DockPanel.Dock="Left" />
+                            <TextBox Style="{StaticResource NumBox}" DockPanel.Dock="Right" Text="{Binding Model.ChartTopSlices}" />
                         </DockPanel>
                     </StackPanel>
                 </Expander>

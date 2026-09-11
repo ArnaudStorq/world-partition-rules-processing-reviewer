@@ -54,6 +54,30 @@ public sealed partial class SessionViewModel : ObservableObject
         foreach (var s in ReviewPipeline.CreateSteps())
             Steps.Add(new PipelineStepViewModel(s));
 
+        Overview = new OverviewViewModel(settings, ScopeToRecords);
+
+        FixAdvisor = new FixAdvisorViewModel(settings, log, ai, new FixAdvisorActions
+        {
+            ConfirmApply = ConfirmFixApply,
+            Preview = (card, records) => ShowFixPreview(card, records),
+            OpenInCursor = (title, records) => OpenGroupInCursor(title, records, AnomalySeverity.Medium),
+            ScopeToRecords = ScopeToRecords,
+            AfterApply = RefreshAfterFix,
+            Activate = () => SelectedSmartTab = FixAdvisorTabIndex,
+            OpenJournal = RevealFile
+        });
+
+        Explorer = new WarningExplorerViewModel(settings, new ExplorerActions
+        {
+            MarkRead = MarkRecordsRead,
+            Approve = records => ApproveRecords(records, null),
+            Flag = records => FlagRecords(records, null),
+            OpenInCursor = node => OpenGroupInCursor(node.Title, node.Records, node.MaxSeverity),
+            AskAi = node => AskFixAdvisor(node.Title, node.Records),
+            ShowRecord = record => _inspector.Show(record, GetSourceLines())
+        });
+        Explorer.ScopeChanged += OnExplorerScopeChanged;
+
         HlodLayerFilter = new AssignmentValueFilter("HLODLayer", AssignmentType.HLODLayer, RefreshView);
         IncludeInHlodFilter = new AssignmentValueFilter("IncludeInHLOD", AssignmentType.IncludeInHLOD, RefreshView);
         DataLayerFilter = new AssignmentValueFilter("DataLayer", AssignmentType.DataLayer, RefreshView);
@@ -109,12 +133,26 @@ public sealed partial class SessionViewModel : ObservableObject
         OnPropertyChanged(nameof(HasProcessingDate));
 
         BuildValueFilters(report);
+
+        // The Explorer, the charts and the Fix Advisor sit beside the Errors / Warnings grid and must
+        // describe exactly what it shows; the applied assignments are the Applied Rules tab's business.
+        var issues = IssueRecords(report);
+        Explorer.SetRecords(issues);
+        FixAdvisor.SetReport(report, issues);
+        Overview.SetRecords(issues);
         _view = new ListCollectionView(report.Records) { Filter = FilterRecord };
         OnPropertyChanged(nameof(Records));
         RefreshCounts();
         RebuildPage();
         IsProcessing = false;
     }
+
+    /// <summary>Everything the engine reported as wrong: the population of the Errors / Warnings tab.</summary>
+    private static IReadOnlyList<RuleRecord> IssueRecords(SessionReport report) =>
+        report.Records.Where(IsIssue).ToList();
+
+    private static bool IsIssue(RuleRecord r) =>
+        r.Category is RecordCategory.Warning or RecordCategory.Error or RecordCategory.ImportError;
 
     /// <summary>TeamCity processing date for the tab badge (empty for local logs without a timestamp).</summary>
     public string ProcessingDateLabel { get; private set; } = string.Empty;
@@ -221,8 +259,10 @@ public sealed partial class SessionViewModel : ObservableObject
                 g.Key,
                 g.OrderBy(r => r.DisplayActor, StringComparer.OrdinalIgnoreCase).ToList(),
                 g.Max(r => r.Severity)))
-            .OrderByDescending(g => g.Severity)
+            // Volume first: the point of these lists is to show what dominates the session.
+            .OrderByDescending(g => g.Occurrences)
             .ThenByDescending(g => g.Count)
+            .ThenByDescending(g => g.Severity)
             .ToList();
 
     /// <summary>Identity of a "problem": the triage reason, then the raw reason, then the value.</summary>
@@ -243,6 +283,115 @@ public sealed partial class SessionViewModel : ObservableObject
 
     private static string NormalizeReason(string reason)
         => QuotedValue.Replace(reason, "'…'").Trim();
+
+    // ---- Warning Explorer (left sidebar) -----------------------------------
+    public WarningExplorerViewModel Explorer { get; }
+
+    // ---- Fix Advisor (Smart Analysis tab) ----------------------------------
+    public FixAdvisorViewModel FixAdvisor { get; }
+
+    // ---- Overview charts (Smart Analysis tab) ------------------------------
+    public OverviewViewModel Overview { get; }
+
+    /// <summary>Position of the Fix Advisor tab in the Smart Analysis tab control.</summary>
+    private const int FixAdvisorTabIndex = 3;
+
+    /// <summary>
+    /// Selected index of the Smart Analysis tab control, so code can bring a tab forward. Starts on
+    /// the Fix Advisor because the session opens on the Applied Rules tab, whose tab set starts there.
+    /// </summary>
+    [ObservableProperty] private int _selectedSmartTab = FixAdvisorTabIndex;
+
+    private void AskFixAdvisor(string title, IReadOnlyList<RuleRecord> records)
+        => FixAdvisor.AnalyzeScope(title, records);
+
+    /// <summary>Confirms a batch apply, showing exactly what will change.</summary>
+    private bool ConfirmFixApply(FixRecommendationViewModel card, IReadOnlyList<RuleRecord> records)
+    {
+        var actions = string.Join(Environment.NewLine, card.Actions.Select(a => "  - " + a.Describe()));
+        var message =
+            $"Apply \"{card.Title}\" to {records.Count} row(s)?{Environment.NewLine}{Environment.NewLine}" +
+            $"Actions:{Environment.NewLine}{actions}{Environment.NewLine}{Environment.NewLine}" +
+            "This is recorded in the fix journal and can be undone.";
+
+        var answer = MessageBox.Show(System.Windows.Application.Current?.MainWindow!, message, "Apply fix",
+            MessageBoxButton.OKCancel, MessageBoxImage.Question);
+        return answer == MessageBoxResult.OK;
+    }
+
+    /// <summary>Shows the rows a recommendation would touch, without applying anything.</summary>
+    private void ShowFixPreview(FixRecommendationViewModel card, IReadOnlyList<RuleRecord> records)
+    {
+        ScopeToRecords(card.Title, records);
+        _log.Info($"Previewing \"{card.Title}\": {records.Count} row(s) matched by {card.MatchDescription}.", "Fix");
+    }
+
+    /// <summary>Scopes the main grid to an arbitrary set of records (used by the Fix Advisor cards).</summary>
+    private void ScopeToRecords(string title, IReadOnlyList<RuleRecord> records)
+    {
+        // Drop any tree selection first: this scope replaces it, and leaving the node highlighted
+        // would suggest the grid still shows that subtree.
+        if (Explorer.SelectedNode is not null) Explorer.ClearScopeCommand.Execute(null);
+
+        _scopeRecords = records.Count == 0 ? null : new HashSet<RuleRecord>(records);
+        _adHocScopeLabel = records.Count == 0 ? null : title;
+
+        OnPropertyChanged(nameof(HasScope));
+        OnPropertyChanged(nameof(ScopeLabel));
+        OnPropertyChanged(nameof(ScopeCount));
+        RefreshView();
+    }
+
+    private void RefreshAfterFix()
+    {
+        RefreshView();
+        RefreshCounts();
+    }
+
+    private void RevealFile(string path)
+    {
+        try
+        {
+            if (!File.Exists(path)) { _log.Warning($"File not found: {path}", "Fix"); return; }
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"/select,\"{path}\"")
+            {
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex) { _log.Error($"Could not open Explorer: {ex.Message}", "Fix"); }
+    }
+
+    /// <summary>
+    /// Records of the subtree selected in the explorer. Null means "no scope". Membership is an
+    /// O(1) hash lookup inside the grid filter, which keeps paging responsive on large sessions.
+    /// </summary>
+    private HashSet<RuleRecord>? _scopeRecords;
+
+    /// <summary>Label of a scope that did not come from the explorer tree (e.g. a Fix Advisor card).</summary>
+    private string? _adHocScopeLabel;
+
+    public bool HasScope => _scopeRecords is not null;
+    public string ScopeLabel => _adHocScopeLabel ?? Explorer.ScopeLabel;
+    public int ScopeCount => _scopeRecords?.Count ?? 0;
+
+    private void OnExplorerScopeChanged(WarningNodeViewModel? node)
+    {
+        // RuleRecord does not override Equals, so the default comparer is reference identity.
+        _scopeRecords = node is null ? null : new HashSet<RuleRecord>(node.Records);
+        _adHocScopeLabel = null;
+
+        OnPropertyChanged(nameof(HasScope));
+        OnPropertyChanged(nameof(ScopeLabel));
+        OnPropertyChanged(nameof(ScopeCount));
+        RefreshView();
+    }
+
+    [RelayCommand]
+    private void ClearScope()
+    {
+        if (Explorer.SelectedNode is not null) Explorer.ClearScopeCommand.Execute(null);
+        else ScopeToRecords(string.Empty, Array.Empty<RuleRecord>());
+    }
 
     /// <summary>Selection in a side list; mirrors into the shared inspector without touching the main grid.</summary>
     [ObservableProperty] private RuleRecord? _sideSelectedRecord;
@@ -276,6 +425,17 @@ public sealed partial class SessionViewModel : ObservableObject
     private void OpenInCursor(InsightGroup? group)
     {
         if (group is null || group.Items.Count == 0) return;
+        OpenGroupInCursor(group.Title, group.Items, group.Severity);
+    }
+
+    /// <summary>
+    /// Shared by the Smart Analysis groups and the Warning Explorer nodes: write the full English
+    /// context to disk, then open a Cursor thread pointing at it.
+    /// </summary>
+    public void OpenGroupInCursor(string title, IReadOnlyList<RuleRecord> records, AnomalySeverity severity)
+    {
+        if (records.Count == 0) return;
+        var group = new InsightGroup(title, records, severity);
         try
         {
             var full = BuildCursorContext(group, null);
@@ -434,7 +594,7 @@ public sealed partial class SessionViewModel : ObservableObject
     public int AppliedCount => _report?.AppliedCount ?? 0;
     public int WarningCount => _report?.WarningCount ?? 0;
     public int ErrorCount => _report?.ErrorCount ?? 0;
-    public int WarningErrorCount => WarningCount + ErrorCount;
+    public int WarningErrorCount => WarningCount + ErrorCount + ImportErrorCount;
     public int ImportErrorCount => _report?.ImportErrorCount ?? 0;
     public int SkippedCount => _report?.SkippedCount ?? 0;
     public int AnomalyCount => _report?.AnomalyCount ?? 0;
@@ -509,6 +669,7 @@ public sealed partial class SessionViewModel : ObservableObject
         _view?.Refresh();
         CurrentPage = 1;
         OnPropertyChanged(nameof(ReadCount));
+        Explorer.RefreshProgress();
         RebuildPage();
     }
 
@@ -519,7 +680,7 @@ public sealed partial class SessionViewModel : ObservableObject
     [ObservableProperty] private string _selectedTab = "Applied";
 
     /// <summary>Assignment scope filter: All, HLODLayer, IncludeInHLOD, DataLayer, RuntimeGrid.</summary>
-    [ObservableProperty] private string _selectedScope = "HLODLayer";
+    [ObservableProperty] private string _selectedScope = "All";
 
     /// <summary>When false, rows marked as read are hidden.</summary>
     [ObservableProperty] private bool _showRead;
@@ -531,6 +692,15 @@ public sealed partial class SessionViewModel : ObservableObject
 
     public bool IsAppliedTab => SelectedTab == "Applied";
 
+    /// <summary>
+    /// The Explorer and Smart Analysis panels only reason about errors and warnings, so they follow
+    /// this tab instead of cluttering the Applied and Skipped views.
+    /// </summary>
+    public bool IsWarningsTab => SelectedTab == "WarningsErrors";
+
+    /// <summary>The Skipped tab has nothing for the side panel to analyse.</summary>
+    public bool HasSmartAnalysis => IsAppliedTab || IsWarningsTab;
+
     partial void OnSearchTextChanged(string value) => RefreshView();
 
     [RelayCommand]
@@ -538,8 +708,15 @@ public sealed partial class SessionViewModel : ObservableObject
 
     partial void OnSelectedTabChanged(string value)
     {
-        if (value != "Applied") SelectedScope = "HLODLayer";   // scope only applies to Applied
+        // The scope boxes only exist on Applied, so reset them: leaving them on the last pick would
+        // silently hide most of the tab when the user comes back to it.
+        SelectedScope = "All";
         OnPropertyChanged(nameof(IsAppliedTab));
+        OnPropertyChanged(nameof(IsWarningsTab));
+        OnPropertyChanged(nameof(HasSmartAnalysis));
+
+        // The two tab sets do not overlap, so land on the first tab that is actually visible.
+        SelectedSmartTab = IsAppliedTab ? FixAdvisorTabIndex : 0;
         OnPropertyChanged(nameof(FilterAnomalyCount));
         OnPropertyChanged(nameof(FilterExpectedCount));
         OnPropertyChanged(nameof(FilterKnownNoiseCount));
@@ -594,14 +771,28 @@ public sealed partial class SessionViewModel : ObservableObject
         RefreshView();
     }
 
+    /// <summary>Marks an explicit set of records as read (used by the Warning Explorer subtree action).</summary>
+    public void MarkRecordsRead(IReadOnlyList<RuleRecord> records)
+    {
+        if (records.Count == 0) return;
+        foreach (var r in records) r.IsRead = true;
+        _log.Info($"Marked {records.Count} row(s) as read.", "Review");
+        RefreshView();
+    }
+
     /// <summary>Raised after a report is persisted. True = approved journal, false = suspicious journal.</summary>
     public event Action<bool>? ReportSaved;
 
     /// <summary>Ask for a free-text note and persist it (covers the whole selection).</summary>
     [RelayCommand]
-    private void ReportSuspicious(RuleRecord? record)
+    private void ReportSuspicious(RuleRecord? record) => FlagRecords(TargetRecords(record), record);
+
+    /// <summary>Ask why the operation is valid and persist it (covers the whole selection).</summary>
+    [RelayCommand]
+    private void Approve(RuleRecord? record) => ApproveRecords(TargetRecords(record), record);
+
+    public void FlagRecords(IReadOnlyList<RuleRecord> targets, RuleRecord? record)
     {
-        var targets = TargetRecords(record);
         if (targets.Count == 0 || _report is null) return;
 
         var title = targets.Count > 1 ? $"Flag {targets.Count} suspicious actors" : "Flag a suspicious actor";
@@ -632,11 +823,8 @@ public sealed partial class SessionViewModel : ObservableObject
         }
     }
 
-    /// <summary>Ask why the operation is valid and persist it (covers the whole selection).</summary>
-    [RelayCommand]
-    private void Approve(RuleRecord? record)
+    public void ApproveRecords(IReadOnlyList<RuleRecord> targets, RuleRecord? record)
     {
-        var targets = TargetRecords(record);
         if (targets.Count == 0 || _report is null) return;
 
         var title = targets.Count > 1 ? $"Approve {targets.Count} operations" : "Approve this operation";
@@ -681,6 +869,9 @@ public sealed partial class SessionViewModel : ObservableObject
     {
         if (obj is not RuleRecord r) return false;
 
+        // Explorer / chart scope: when a subtree or a slice is selected, the grid shows only that set.
+        if (_scopeRecords is not null && !_scopeRecords.Contains(r)) return false;
+
         // Read workflow: hide read rows unless "Show read" is on.
         if (r.IsRead && !ShowRead) return false;
 
@@ -693,7 +884,7 @@ public sealed partial class SessionViewModel : ObservableObject
         var tabOk = SelectedTab switch
         {
             "Applied" => r.Category == RecordCategory.Applied,
-            "WarningsErrors" => r.Category is RecordCategory.Warning or RecordCategory.Error,
+            "WarningsErrors" => IsIssue(r),
             "Skipped" => r.Category == RecordCategory.Skipped,
             _ => true
         };
@@ -720,16 +911,18 @@ public sealed partial class SessionViewModel : ObservableObject
                 if (!f.Allows(r)) return false;
         }
 
-        if (!string.IsNullOrWhiteSpace(SearchText))
-        {
-            var s = SearchText.Trim();
-            var hit = r.DisplayActor.Contains(s, StringComparison.OrdinalIgnoreCase)
-                      || r.Value.Contains(s, StringComparison.OrdinalIgnoreCase)
-                      || (r.StatusReason?.Contains(s, StringComparison.OrdinalIgnoreCase) ?? false)
-                      || (r.Reason?.Contains(s, StringComparison.OrdinalIgnoreCase) ?? false);
-            if (!hit) return false;
-        }
-        return true;
+        return MatchesSearch(r);
+    }
+
+    private bool MatchesSearch(RuleRecord r)
+    {
+        if (string.IsNullOrWhiteSpace(SearchText)) return true;
+
+        var s = SearchText.Trim();
+        return r.DisplayActor.Contains(s, StringComparison.OrdinalIgnoreCase)
+               || r.Value.Contains(s, StringComparison.OrdinalIgnoreCase)
+               || (r.StatusReason?.Contains(s, StringComparison.OrdinalIgnoreCase) ?? false)
+               || (r.Reason?.Contains(s, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 
     // ---- AI ----------------------------------------------------------------
@@ -1047,6 +1240,9 @@ public sealed class InsightGroup
     public IReadOnlyList<RuleRecord> Items { get; }
     public AnomalySeverity Severity { get; }
     public int Count => Items.Count;
+
+    /// <summary>Log lines behind the group: identical lines are collapsed into one record at parse time.</summary>
+    public int Occurrences => Items.Sum(r => Math.Max(1, r.Occurrences));
 }
 
 /// <summary>One selectable value inside an <see cref="AssignmentValueFilter"/> (e.g. "DL_LIGHTING" with a count).</summary>

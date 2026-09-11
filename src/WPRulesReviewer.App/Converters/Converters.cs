@@ -56,6 +56,32 @@ public sealed class CountToVisibilityConverter : IValueConverter
     public object ConvertBack(object? value, Type t, object? p, CultureInfo c) => Binding.DoNothing;
 }
 
+/// <summary>Slider values are doubles; int dependency properties need the rounded value.</summary>
+public sealed class DoubleToIntConverter : IValueConverter
+{
+    public object Convert(object? value, Type t, object? p, CultureInfo c) =>
+        value is double d ? (int)Math.Round(d) : 0;
+    public object ConvertBack(object? value, Type t, object? p, CultureInfo c) =>
+        value is int i ? (double)i : 0d;
+}
+
+/// <summary>Visible when a numeric value is strictly positive (progress bars, ratios).</summary>
+public sealed class PositiveToVisibilityConverter : IValueConverter
+{
+    public object Convert(object? value, Type t, object? p, CultureInfo c)
+    {
+        var positive = value switch
+        {
+            double d => d > 0,
+            int i => i > 0,
+            _ => false
+        };
+        if (string.Equals(p as string, "invert", StringComparison.OrdinalIgnoreCase)) positive = !positive;
+        return positive ? Visibility.Visible : Visibility.Collapsed;
+    }
+    public object ConvertBack(object? value, Type t, object? p, CultureInfo c) => Binding.DoNothing;
+}
+
 /// <summary>Checks that a value equals the given parameter (used for nav toggles / enum radios).</summary>
 public sealed class EqualsConverter : IValueConverter
 {
@@ -129,6 +155,41 @@ public sealed class ActivityLevelToBrushConverter : IValueConverter
         };
         return BrushLookup.Find(key);
     }
+    public object ConvertBack(object? value, Type t, object? p, CultureInfo c) => Binding.DoNothing;
+}
+
+/// <summary>
+/// Hex string to Brush, falling back to the active theme accent. An empty accent setting means
+/// "use the theme's own accent", so the swatch must still show something meaningful.
+/// </summary>
+public sealed class HexToBrushConverter : IValueConverter
+{
+    public object Convert(object? value, Type t, object? p, CultureInfo c)
+    {
+        var hex = value as string;
+        if (!string.IsNullOrWhiteSpace(hex))
+        {
+            try
+            {
+                if (ColorConverter.ConvertFromString(hex) is Color color) return new SolidColorBrush(color);
+            }
+            catch { /* not a color: fall through to the theme accent */ }
+        }
+        return BrushLookup.Find("Brush.Accent");
+    }
+
+    public object ConvertBack(object? value, Type t, object? p, CultureInfo c) => Binding.DoNothing;
+}
+
+/// <summary>Maps a slice index to one of the eight categorical chart brushes (wraps around).</summary>
+public sealed class IndexToChartBrushConverter : IValueConverter
+{
+    public object Convert(object? value, Type t, object? p, CultureInfo c)
+    {
+        if (value is not int index || index < 0) return BrushLookup.Find("Brush.ChartOther");
+        return BrushLookup.Find($"Brush.Chart{index % 8 + 1}");
+    }
+
     public object ConvertBack(object? value, Type t, object? p, CultureInfo c) => Binding.DoNothing;
 }
 

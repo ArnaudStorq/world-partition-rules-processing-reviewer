@@ -6,6 +6,8 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Tokens.xaml" />
+                <ResourceDictionary Source="Assets/BrandMark.xaml" />
                 <ResourceDictionary Source="Themes/Theme.Light.xaml" />
                 <ResourceDictionary Source="Themes/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
@@ -19,6 +21,10 @@
             <conv:StatusToBrushConverter x:Key="StatusToBrush" />
             <conv:CategoryToBrushConverter x:Key="CatToBrush" />
             <conv:ActivityLevelToBrushConverter x:Key="LevelToBrush" />
+            <conv:HexToBrushConverter x:Key="HexToBrush" />
+            <conv:PositiveToVisibilityConverter x:Key="PositiveToVis" />
+            <conv:DoubleToIntConverter x:Key="DoubleToInt" />
+            <conv:IndexToChartBrushConverter x:Key="IndexToChartBrush" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
