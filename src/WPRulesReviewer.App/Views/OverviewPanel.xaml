@@ -106,7 +106,13 @@
                         <TextBlock Text="Share of the anomalies, errors and items needing review."
                                    Style="{StaticResource Text.Muted}" Margin="0,0,0,10" />
                         <Grid Height="230">
+                            <!-- The chart paints its own canvas, so its background and the legend /
+                                 tooltip text have to be told about the theme; their defaults assume
+                                 a white page and stay black on the dark panels. -->
                             <lvc:PieChart x:Name="SignatureChart" Series="{Binding SignatureSeries}"
+                                          Background="Transparent"
+                                          TooltipTextPaint="{Binding ChromeTextPaint}"
+                                          TooltipBackgroundPaint="{Binding ChromeBackgroundPaint}"
                                           LegendPosition="Hidden" TooltipPosition="Top"
                                           DataPointerDown="SignatureChart_OnDataPointerDown" />
                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
@@ -132,6 +138,11 @@
                                             Series="{Binding TopProblemSeries}"
                                             XAxes="{Binding TopProblemXAxes}"
                                             YAxes="{Binding TopProblemYAxes}"
+                                            Background="Transparent"
+                                            LegendTextPaint="{Binding ChromeTextPaint}"
+                                            LegendBackgroundPaint="{Binding ChromeBackgroundPaint}"
+                                            TooltipTextPaint="{Binding ChromeTextPaint}"
+                                            TooltipBackgroundPaint="{Binding ChromeBackgroundPaint}"
                                             LegendPosition="Bottom"
                                             TooltipPosition="Top" />
                     </StackPanel>
@@ -146,6 +157,9 @@
                                    Style="{StaticResource Text.Muted}" Margin="0,0,0,10" />
                         <Grid Height="190">
                             <lvc:PieChart x:Name="StatusChart" Series="{Binding StatusSeries}"
+                                          Background="Transparent"
+                                          TooltipTextPaint="{Binding ChromeTextPaint}"
+                                          TooltipBackgroundPaint="{Binding ChromeBackgroundPaint}"
                                           LegendPosition="Hidden" TooltipPosition="Top"
                                           DataPointerDown="StatusChart_OnDataPointerDown" />
                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">

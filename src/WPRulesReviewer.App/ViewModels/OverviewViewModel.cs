@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
 using WPRulesReviewer.App.Services;
 using WPRulesReviewer.Core.Analysis;
 using WPRulesReviewer.Core.Models;
@@ -55,6 +56,11 @@ public sealed partial class OverviewViewModel : ObservableObject
     [ObservableProperty] private Axis[] _topProblemXAxes = Array.Empty<Axis>();
     [ObservableProperty] private Axis[] _topProblemYAxes = Array.Empty<Axis>();
 
+    // Legend and tooltips are drawn by LiveCharts on its own canvas, so they do not inherit anything
+    // from the WPF theme. Refreshed on every rebuild, which is also what a theme switch triggers.
+    [ObservableProperty] private SolidColorPaint? _chromeTextPaint;
+    [ObservableProperty] private SolidColorPaint? _chromeBackgroundPaint;
+
     public ObservableCollection<OverviewSliceViewModel> Legend { get; } = new();
     public ObservableCollection<OverviewSliceViewModel> StatusLegend { get; } = new();
 
@@ -93,6 +99,9 @@ public sealed partial class OverviewViewModel : ObservableObject
         LitigiousCount = litigious.Count;
         ReadCount = _records.Count(r => r.IsRead);
         SignatureCount = buckets.Count;
+
+        ChromeTextPaint = ChartPalette.ChromeTextPaint();
+        ChromeBackgroundPaint = ChartPalette.Paint(ChartPalette.Surface);
 
         BuildSignatureDonut(buckets);
         BuildStatusDonut();

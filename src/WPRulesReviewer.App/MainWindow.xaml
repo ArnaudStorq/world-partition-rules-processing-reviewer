@@ -15,38 +15,57 @@
         TextOptions.TextRenderingMode="ClearType">
 
     <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="52" ResizeBorderThickness="6" CornerRadius="0"
+        <WindowChrome CaptionHeight="44" ResizeBorderThickness="6" CornerRadius="0"
                       GlassFrameThickness="0" UseAeroCaptionButtons="False" />
     </WindowChrome.WindowChrome>
 
     <Window.Resources>
+        <!-- The title bar stays dark in both themes: it is window chrome, and a dark band frames the
+             light-theme content the way a matte frames a print. These are fixed colors on purpose,
+             so they never follow the theme dictionaries. -->
+        <SolidColorBrush x:Key="TitleBar.Background" Color="#0D0F13" />
+        <SolidColorBrush x:Key="TitleBar.Border" Color="#23262E" />
+        <SolidColorBrush x:Key="TitleBar.Text" Color="#F0F2F6" />
+        <SolidColorBrush x:Key="TitleBar.Glyph" Color="#C6CCDA" />
+        <SolidColorBrush x:Key="TitleBar.GlyphHover" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="TitleBar.Hover" Color="#1FFFFFFF" />
+        <SolidColorBrush x:Key="TitleBar.Pressed" Color="#12FFFFFF" />
+
         <Style x:Key="ToolbarButton" TargetType="Button" BasedOn="{StaticResource Button.Subtle}">
             <Setter Property="Margin" Value="4,0,0,0" />
         </Style>
 
-        <!-- Custom title-bar buttons: transparent, light glyphs, subtle hover. Marked hit-test
-             visible in chrome so clicks are received instead of starting a window drag. -->
+        <!-- Custom title-bar buttons: transparent, light glyphs on the dark bar, subtle hover. Marked
+             hit-test visible in chrome so clicks are received instead of starting a window drag. -->
         <Style x:Key="TitleBarButton" TargetType="Button">
-            <Setter Property="Width" Value="48" />
+            <Setter Property="Width" Value="46" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="Foreground" Value="{StaticResource TitleBar.Glyph}" />
             <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
-            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontSize" Value="11" />
             <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bg" Background="{TemplateBinding Background}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
-                                              TextElement.Foreground="{TemplateBinding Foreground}" />
+                            <!-- The glyph is drawn by an explicit TextBlock rather than a ContentPresenter:
+                                 a presenter wraps the string in a TextBlock that picks up the app-wide
+                                 TextBlock style, whose foreground is near-black and invisible on the
+                                 always-dark bar in light theme. A local binding here always wins. -->
+                            <TextBlock Text="{TemplateBinding Content}"
+                                       Foreground="{TemplateBinding Foreground}"
+                                       FontFamily="{TemplateBinding FontFamily}"
+                                       FontSize="{TemplateBinding FontSize}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bg" Property="Background" Value="#26FFFFFF" />
+                                <Setter TargetName="bg" Property="Background" Value="{StaticResource TitleBar.Hover}" />
+                                <Setter Property="Foreground" Value="{StaticResource TitleBar.GlyphHover}" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="bg" Property="Background" Value="#14FFFFFF" />
+                                <Setter TargetName="bg" Property="Background" Value="{StaticResource TitleBar.Pressed}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -55,7 +74,7 @@
         </Style>
 
         <Style x:Key="TitleBarActionButton" TargetType="Button" BasedOn="{StaticResource TitleBarButton}">
-            <Setter Property="FontSize" Value="17" />
+            <Setter Property="FontSize" Value="15" />
         </Style>
 
         <Style x:Key="TitleBarCloseButton" TargetType="Button" BasedOn="{StaticResource TitleBarButton}">
@@ -63,8 +82,12 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bg" Background="{TemplateBinding Background}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
-                                              TextElement.Foreground="{TemplateBinding Foreground}" />
+                            <!-- See TitleBarButton: an explicit TextBlock keeps the app-wide style off the glyph. -->
+                            <TextBlock Text="{TemplateBinding Content}"
+                                       Foreground="{TemplateBinding Foreground}"
+                                       FontFamily="{TemplateBinding FontFamily}"
+                                       FontSize="{TemplateBinding FontSize}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -91,31 +114,13 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- ===== Custom title bar (always dark, colorful) ===== -->
-        <Border Grid.Row="0" x:Name="TitleBar" Height="52"
-                BorderBrush="#7A5AF8" BorderThickness="0,0,0,2">
-            <Border.Background>
-                <!-- Dark base with a colored glow bleeding in from both edges -->
-                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                    <GradientStop Offset="0"    Color="#3A2A7A" />
-                    <GradientStop Offset="0.22" Color="#0C0C16" />
-                    <GradientStop Offset="0.5"  Color="#070709" />
-                    <GradientStop Offset="0.78" Color="#0C0C16" />
-                    <GradientStop Offset="1"    Color="#123A7A" />
-                </LinearGradientBrush>
-            </Border.Background>
+        <!-- ===== Custom title bar =====
+             Dark in both themes and deliberately quiet: the window frame is not where the product
+             should show off. Identity comes from the brand mark, not from a colored bar. -->
+        <Border Grid.Row="0" x:Name="TitleBar" Height="44"
+                Background="{StaticResource TitleBar.Background}"
+                BorderBrush="{StaticResource TitleBar.Border}" BorderThickness="0,0,0,1">
             <Grid>
-                <!-- Glossy sheen overlay across the top half -->
-                <Border IsHitTestVisible="False">
-                    <Border.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                            <GradientStop Offset="0"   Color="#22FFFFFF" />
-                            <GradientStop Offset="0.5" Color="#05FFFFFF" />
-                            <GradientStop Offset="1"   Color="#00000000" />
-                        </LinearGradientBrush>
-                    </Border.Background>
-                </Border>
-
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -123,51 +128,31 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- Left: brand mark (vector, so it stays crisp at any DPI) -->
-                    <Image Grid.Column="0" Source="{StaticResource Brand.Mark}"
-                           Width="26" Height="26" Margin="16,0,0,0" VerticalAlignment="Center" />
+                    <!-- Left: brand mark (vector, so it stays crisp at any DPI) and the product name. -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"
+                                Margin="14,0,0,0" IsHitTestVisible="False">
+                        <Image Source="{StaticResource Brand.Mark}" Width="20" Height="20" />
+                        <TextBlock Text="World Partition Rules Processing Reviewer"
+                                   Margin="10,0,0,0" VerticalAlignment="Center"
+                                   FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TitleBar.Text}" />
+                    </StackPanel>
 
-                    <!-- Centered application title (transparent to hit-testing so the bar stays draggable) -->
-                    <TextBlock Grid.ColumnSpan="3" Text="WORLD PARTITION RULES PROCESSING REVIEWER"
-                               FontSize="21" FontWeight="ExtraBold" HorizontalAlignment="Center"
-                               VerticalAlignment="Center" IsHitTestVisible="False"
-                               FontFamily="Segoe UI Variable Display, Segoe UI">
-                        <TextBlock.Foreground>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                <GradientStop Offset="0"   Color="#66E0FF" />
-                                <GradientStop Offset="0.5" Color="#B49CFF" />
-                                <GradientStop Offset="1"   Color="#66E0FF" />
-                            </LinearGradientBrush>
-                        </TextBlock.Foreground>
-                        <TextBlock.Effect>
-                            <DropShadowEffect Color="#7A5AF8" BlurRadius="14" ShadowDepth="0" Opacity="0.55" />
-                        </TextBlock.Effect>
-                    </TextBlock>
-
-                    <!-- Right: app actions + window caption buttons.
-                         Each glyph is an explicit white TextBlock so it never inherits the theme foreground. -->
+                    <!-- Right: app actions + window caption buttons. Glyphs inherit the button
+                         foreground so they follow the theme and its hover state. -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Stretch"
                                 WindowChrome.IsHitTestVisibleInChrome="True">
-                        <Button Style="{StaticResource TitleBarActionButton}"
-                                ToolTip="Toggle light/dark theme" Command="{Binding ToggleThemeCommand}">
-                            <TextBlock Text="&#xE793;" FontFamily="Segoe MDL2 Assets" FontSize="17" Foreground="#FFFFFF" />
-                        </Button>
-                        <Button Style="{StaticResource TitleBarActionButton}" ToolTip="Settings"
-                                Command="{Binding ShowSettingsCommand}">
-                            <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="17" Foreground="#FFFFFF" />
-                        </Button>
-                        <Border Width="1" Margin="8,13" Background="#40FFFFFF" />
-                        <Button Style="{StaticResource TitleBarButton}" ToolTip="Minimize" Click="TitleBar_Minimize">
-                            <TextBlock Text="&#xE921;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#FFFFFF" />
-                        </Button>
-                        <Button x:Name="MaxRestoreButton" Style="{StaticResource TitleBarButton}"
-                                ToolTip="Maximize" Click="TitleBar_MaximizeRestore">
-                            <TextBlock x:Name="MaxRestoreGlyph" Text="&#xE922;" FontFamily="Segoe MDL2 Assets"
-                                       FontSize="12" Foreground="#FFFFFF" />
-                        </Button>
-                        <Button Style="{StaticResource TitleBarCloseButton}" ToolTip="Close" Click="TitleBar_Close">
-                            <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#FFFFFF" />
-                        </Button>
+                        <Button Style="{StaticResource TitleBarActionButton}" Content="&#xE793;"
+                                ToolTip="Toggle light/dark theme" Command="{Binding ToggleThemeCommand}" />
+                        <Button Style="{StaticResource TitleBarActionButton}" Content="&#xE713;"
+                                ToolTip="Settings" Command="{Binding ShowSettingsCommand}" />
+                        <Border Width="1" Margin="8,12" Background="{StaticResource TitleBar.Border}" />
+                        <Button Style="{StaticResource TitleBarButton}" Content="&#xE921;"
+                                ToolTip="Minimize" Click="TitleBar_Minimize" />
+                        <Button x:Name="MaxRestoreButton" Style="{StaticResource TitleBarButton}" Content="&#xE922;"
+                                ToolTip="Maximize" Click="TitleBar_MaximizeRestore" />
+                        <Button Style="{StaticResource TitleBarCloseButton}" Content="&#xE8BB;"
+                                ToolTip="Close" Click="TitleBar_Close" />
                     </StackPanel>
                 </Grid>
             </Grid>

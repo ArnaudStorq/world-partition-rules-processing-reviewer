@@ -51,8 +51,9 @@
             <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}" />
         </Style>
 
-        <!-- Outlined dropdown button used by the "Filter by ..." value pickers.
-             Tag carries the per-type accent brush so it matches its scope box. -->
+        <!-- Dropdown button used by the "Filter by ..." value pickers. Tag carries the per-type color,
+             which the content uses for its funnel glyph; the frame itself stays neutral like the scope
+             boxes above it, so the whole filter area reads as one strip of controls. -->
         <Style x:Key="FilterDropdownButton" TargetType="ToggleButton">
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Padding" Value="12,7" />
@@ -62,18 +63,19 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToggleButton">
-                        <Border x:Name="bd" CornerRadius="8" BorderThickness="1" Padding="{TemplateBinding Padding}"
+                        <Border x:Name="bd" CornerRadius="6" BorderThickness="1" Padding="{TemplateBinding Padding}"
                                 Background="{DynamicResource Brush.Control}"
-                                BorderBrush="{TemplateBinding Tag}">
+                                BorderBrush="{DynamicResource Brush.ControlBorder}">
                             <ContentPresenter VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.ControlHover}" />
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.TextMuted}" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Selection}" />
-                                <Setter TargetName="bd" Property="BorderThickness" Value="2" />
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -154,7 +156,9 @@
         <SolidColorBrush x:Key="Brush.Type.Grid" Color="#F59E0B" />
 
         <!-- Scope box (assignment-type filter, mirrors the website count boxes).
-             Tag carries the per-type accent brush used for the border and count badge. -->
+             Tag carries the per-type color. It is shown as a leading dot rather than as the border:
+             five differently outlined boxes side by side read as five alerts, not as one filter strip.
+             The frame stays neutral so the accent is free to mean "this is the active scope". -->
         <Style x:Key="ScopeBox" TargetType="ToggleButton">
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="MinWidth" Value="150" />
@@ -164,18 +168,23 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToggleButton">
-                        <Border x:Name="bd" CornerRadius="8" BorderThickness="1" Padding="12,8"
+                        <Border x:Name="bd" CornerRadius="6" BorderThickness="1" Padding="12,7"
                                 Background="{DynamicResource Brush.Control}"
-                                BorderBrush="{TemplateBinding Tag}">
-                            <ContentPresenter VerticalAlignment="Center" />
+                                BorderBrush="{DynamicResource Brush.ControlBorder}">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="7" Height="7" Margin="0,0,9,0" VerticalAlignment="Center"
+                                         Fill="{TemplateBinding Tag}" />
+                                <ContentPresenter VerticalAlignment="Center" />
+                            </StackPanel>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.ControlHover}" />
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.TextMuted}" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.Selection}" />
-                                <Setter TargetName="bd" Property="BorderThickness" Value="2" />
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -184,40 +193,46 @@
         </Style>
 
         <Style x:Key="ScopeCount" TargetType="Border">
-            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="CornerRadius" Value="4" />
             <Setter Property="Padding" Value="7,1" />
             <Setter Property="Margin" Value="10,0,0,0" />
             <Setter Property="MinWidth" Value="24" />
             <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}" />
         </Style>
 
-        <!-- Per-row Read toggle used in the grid "Read" column. DataContext = RuleRecord. -->
-        <Style x:Key="ReadToggleButton" TargetType="Button">
+        <!-- Per-row actions are ghost buttons: three outlined boxes repeated on every line turned the
+             review column into a wall of chrome. They gain an outline on hover, and keep their color
+             once the action has been taken, so a scan of the column shows progress and nothing else. -->
+        <Style x:Key="RowActionButton" TargetType="Button">
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="HorizontalAlignment" Value="Left" />
             <Setter Property="SnapsToDevicePixels" Value="True" />
+        </Style>
+
+        <!-- Per-row Read toggle used in the grid "Read" column. DataContext = RuleRecord. -->
+        <Style x:Key="ReadToggleButton" TargetType="Button" BasedOn="{StaticResource RowActionButton}">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" CornerRadius="6" BorderThickness="1" Padding="8,3"
-                                Background="{DynamicResource Brush.Control}"
-                                BorderBrush="{DynamicResource Brush.ControlBorder}">
+                        <Border x:Name="bd" CornerRadius="4" BorderThickness="1" Padding="8,3"
+                                Background="Transparent" BorderBrush="Transparent">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Name="ico" Text="&#xE739;" Style="{StaticResource Glyph}" FontSize="13"
                                            Margin="0,0,6,0" Foreground="{DynamicResource Brush.TextMuted}" />
-                                <TextBlock x:Name="txt" Text="Mark read" FontSize="11.5" VerticalAlignment="Center" />
+                                <TextBlock x:Name="txt" Text="Mark read" FontSize="11.5" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.TextSecondary}" />
                             </StackPanel>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.ControlHover}" />
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.ControlBorder}" />
                             </Trigger>
                             <DataTrigger Binding="{Binding IsRead}" Value="True">
                                 <Setter TargetName="ico" Property="Text" Value="&#xE73E;" />
                                 <Setter TargetName="ico" Property="Foreground" Value="{DynamicResource Brush.StatusExpected}" />
                                 <Setter TargetName="txt" Property="Text" Value="Read" />
                                 <Setter TargetName="txt" Property="Foreground" Value="{DynamicResource Brush.StatusExpected}" />
-                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.StatusExpected}" />
                             </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -226,31 +241,29 @@
         </Style>
 
         <!-- Per-row "approve as valid" button. DataContext = RuleRecord. -->
-        <Style x:Key="ApproveToggleButton" TargetType="Button">
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="HorizontalAlignment" Value="Left" />
-            <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Style x:Key="ApproveToggleButton" TargetType="Button" BasedOn="{StaticResource RowActionButton}">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" CornerRadius="6" BorderThickness="1" Padding="8,3"
-                                Background="{DynamicResource Brush.Control}"
-                                BorderBrush="{DynamicResource Brush.ControlBorder}">
+                        <Border x:Name="bd" CornerRadius="4" BorderThickness="1" Padding="8,3"
+                                Background="Transparent" BorderBrush="Transparent">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Name="ico" Text="&#xE8E1;" Style="{StaticResource Glyph}" FontSize="13"
-                                           Margin="0,0,6,0" Foreground="{DynamicResource Brush.StatusExpected}" />
-                                <TextBlock x:Name="txt" Text="Approve" FontSize="11.5" VerticalAlignment="Center" />
+                                           Margin="0,0,6,0" Foreground="{DynamicResource Brush.TextMuted}" />
+                                <TextBlock x:Name="txt" Text="Approve" FontSize="11.5" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.TextSecondary}" />
                             </StackPanel>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.ControlHover}" />
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.ControlBorder}" />
                             </Trigger>
                             <DataTrigger Binding="{Binding IsApproved}" Value="True">
                                 <Setter TargetName="ico" Property="Text" Value="&#xE8FB;" />
+                                <Setter TargetName="ico" Property="Foreground" Value="{DynamicResource Brush.StatusExpected}" />
                                 <Setter TargetName="txt" Property="Text" Value="Approved" />
                                 <Setter TargetName="txt" Property="Foreground" Value="{DynamicResource Brush.StatusExpected}" />
-                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.StatusExpected}" />
                             </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -259,31 +272,29 @@
         </Style>
 
         <!-- Per-row "flag as suspicious" button. DataContext = RuleRecord. -->
-        <Style x:Key="FlagToggleButton" TargetType="Button">
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="HorizontalAlignment" Value="Left" />
-            <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Style x:Key="FlagToggleButton" TargetType="Button" BasedOn="{StaticResource RowActionButton}">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" CornerRadius="6" BorderThickness="1" Padding="8,3"
-                                Background="{DynamicResource Brush.Control}"
-                                BorderBrush="{DynamicResource Brush.ControlBorder}">
+                        <Border x:Name="bd" CornerRadius="4" BorderThickness="1" Padding="8,3"
+                                Background="Transparent" BorderBrush="Transparent">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Name="ico" Text="&#xE7BA;" Style="{StaticResource Glyph}" FontSize="13"
-                                           Margin="0,0,6,0" Foreground="#F5A623" />
-                                <TextBlock x:Name="txt" Text="Flag" FontSize="11.5" VerticalAlignment="Center" />
+                                           Margin="0,0,6,0" Foreground="{DynamicResource Brush.TextMuted}" />
+                                <TextBlock x:Name="txt" Text="Flag" FontSize="11.5" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.TextSecondary}" />
                             </StackPanel>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource Brush.ControlHover}" />
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Brush.ControlBorder}" />
                             </Trigger>
                             <DataTrigger Binding="{Binding IsReported}" Value="True">
                                 <Setter TargetName="ico" Property="Text" Value="&#xEB90;" />
+                                <Setter TargetName="ico" Property="Foreground" Value="{DynamicResource Brush.StatusNeedsReview}" />
                                 <Setter TargetName="txt" Property="Text" Value="Flagged" />
-                                <Setter TargetName="txt" Property="Foreground" Value="#F5A623" />
-                                <Setter TargetName="bd" Property="BorderBrush" Value="#F5A623" />
+                                <Setter TargetName="txt" Property="Foreground" Value="{DynamicResource Brush.StatusNeedsReview}" />
                             </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -466,9 +477,9 @@
                                       IsChecked="{Binding SelectedScope, Converter={StaticResource Equals}, ConverterParameter=All, Mode=OneWay}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="All types" VerticalAlignment="Center" />
-                                <Border Style="{StaticResource ScopeCount}" Background="{StaticResource Brush.Type.All}">
+                                <Border Style="{StaticResource ScopeCount}">
                                     <TextBlock Text="{Binding AppliedCount}" FontWeight="SemiBold" FontSize="11" TextAlignment="Center"
-                                               Foreground="White" />
+                                               Foreground="{DynamicResource Brush.TextSecondary}" />
                                 </Border>
                             </StackPanel>
                         </ToggleButton>
@@ -479,9 +490,9 @@
                                       IsChecked="{Binding SelectedScope, Converter={StaticResource Equals}, ConverterParameter=HLODLayer, Mode=OneWay}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="HLODLayer" VerticalAlignment="Center" />
-                                <Border Style="{StaticResource ScopeCount}" Background="{StaticResource Brush.Type.Hlod}">
+                                <Border Style="{StaticResource ScopeCount}">
                                     <TextBlock Text="{Binding HlodLayerCount}" FontWeight="SemiBold" FontSize="11" TextAlignment="Center"
-                                               Foreground="White" />
+                                               Foreground="{DynamicResource Brush.TextSecondary}" />
                                 </Border>
                             </StackPanel>
                         </ToggleButton>
@@ -492,9 +503,9 @@
                                       IsChecked="{Binding SelectedScope, Converter={StaticResource Equals}, ConverterParameter=IncludeInHLOD, Mode=OneWay}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="IncludeInHLOD" VerticalAlignment="Center" />
-                                <Border Style="{StaticResource ScopeCount}" Background="{StaticResource Brush.Type.Include}">
+                                <Border Style="{StaticResource ScopeCount}">
                                     <TextBlock Text="{Binding IncludeInHlodCount}" FontWeight="SemiBold" FontSize="11" TextAlignment="Center"
-                                               Foreground="White" />
+                                               Foreground="{DynamicResource Brush.TextSecondary}" />
                                 </Border>
                             </StackPanel>
                         </ToggleButton>
@@ -505,9 +516,9 @@
                                       IsChecked="{Binding SelectedScope, Converter={StaticResource Equals}, ConverterParameter=DataLayer, Mode=OneWay}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="DataLayer" VerticalAlignment="Center" />
-                                <Border Style="{StaticResource ScopeCount}" Background="{StaticResource Brush.Type.DataLayer}">
+                                <Border Style="{StaticResource ScopeCount}">
                                     <TextBlock Text="{Binding DataLayerCount}" FontWeight="SemiBold" FontSize="11" TextAlignment="Center"
-                                               Foreground="White" />
+                                               Foreground="{DynamicResource Brush.TextSecondary}" />
                                 </Border>
                             </StackPanel>
                         </ToggleButton>
@@ -518,9 +529,9 @@
                                       IsChecked="{Binding SelectedScope, Converter={StaticResource Equals}, ConverterParameter=RuntimeGrid, Mode=OneWay}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="RuntimeGrid" VerticalAlignment="Center" />
-                                <Border Style="{StaticResource ScopeCount}" Background="{StaticResource Brush.Type.Grid}">
+                                <Border Style="{StaticResource ScopeCount}">
                                     <TextBlock Text="{Binding RuntimeGridCount}" FontWeight="SemiBold" FontSize="11" TextAlignment="Center"
-                                               Foreground="White" />
+                                               Foreground="{DynamicResource Brush.TextSecondary}" />
                                 </Border>
                             </StackPanel>
                         </ToggleButton>
@@ -529,14 +540,16 @@
                         <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
                             <Border Width="1" Height="34" Background="{DynamicResource Brush.Border}" Margin="4,0,14,0"
                                     VerticalAlignment="Center" />
+                            <!-- Sized like the rest of the toolbar: it was the loudest element on the
+                                 screen, which put the emphasis on a shortcut rather than on the data. -->
                             <Button Style="{StaticResource Button.Action}" Command="{Binding AutoResolveReadingCommand}"
-                                    Padding="24,14" FontSize="16" VerticalAlignment="Center"
+                                    Padding="14,7" VerticalAlignment="Center"
                                     ToolTip="Use AI to confront every unread applied assignment with your approved/suspicious reports and mark the resolved ones as read">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xEC61;" Style="{StaticResource Glyph}" FontSize="20" Margin="0,0,10,0"
-                                               Foreground="{DynamicResource Brush.AccentForeground}" />
-                                    <TextBlock Text="Auto-resolve reading" Foreground="{DynamicResource Brush.AccentForeground}"
-                                               FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center" />
+                                    <TextBlock Text="&#xEC61;" Style="{StaticResource Glyph}" FontSize="14" Margin="0,0,8,0"
+                                               Foreground="#FFFFFF" />
+                                    <TextBlock Text="Auto-resolve reading" Foreground="#FFFFFF"
+                                               FontWeight="SemiBold" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                         </StackPanel>
@@ -723,20 +736,19 @@
                           ScrollViewer.HorizontalScrollBarVisibility="Auto"
                           Visibility="{Binding ShowingCount, Converter={StaticResource CountToVis}}">
                     <DataGrid.Columns>
+                        <!-- Status and Type are colored text next to a colored dot, not filled badges:
+                             a table of filled badges turns the whole column into a color block and the
+                             severity column, which is the one that matters, loses its emphasis. -->
                         <DataGridTemplateColumn Header="Status" Width="140" CanUserSort="False">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate DataType="{x:Type core:RuleRecord}">
-                                    <Grid HorizontalAlignment="Left">
-                                        <Border CornerRadius="10" Background="{Binding Status, Converter={StaticResource StatusToBrush}}"
-                                                Opacity="0.16" />
-                                        <StackPanel Orientation="Horizontal" Margin="9,3">
-                                            <Border Width="7" Height="7" CornerRadius="4" VerticalAlignment="Center"
-                                                    Background="{Binding Status, Converter={StaticResource StatusToBrush}}" />
-                                            <TextBlock Text="{Binding Status}" Margin="6,0,0,0" VerticalAlignment="Center"
-                                                       FontSize="11.5" FontWeight="SemiBold"
-                                                       Foreground="{Binding Status, Converter={StaticResource StatusToBrush}}" />
-                                        </StackPanel>
-                                    </Grid>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                        <Ellipse Width="7" Height="7" VerticalAlignment="Center"
+                                                 Fill="{Binding Status, Converter={StaticResource StatusToBrush}}" />
+                                        <TextBlock Text="{Binding Status}" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                   FontSize="12" FontWeight="SemiBold"
+                                                   Foreground="{Binding Status, Converter={StaticResource StatusToBrush}}" />
+                                    </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -753,11 +765,15 @@
                         <DataGridTemplateColumn Header="Type" Width="120">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate DataType="{x:Type core:RuleRecord}">
-                                    <Border CornerRadius="6" HorizontalAlignment="Left" Padding="9,3"
-                                            Background="{Binding Category, Converter={StaticResource CatToBrush}}">
-                                        <TextBlock Text="{Binding CategoryLabel}" FontSize="11.5" FontWeight="SemiBold"
-                                                   Foreground="White" />
-                                    </Border>
+                                    <Grid HorizontalAlignment="Left">
+                                        <!-- Tinted chip: same hue as the category, at low opacity, so it
+                                             reads as a label rather than as an alert. -->
+                                        <Border CornerRadius="4" Opacity="0.14"
+                                                Background="{Binding Category, Converter={StaticResource CatToBrush}}" />
+                                        <TextBlock Text="{Binding CategoryLabel}" Margin="8,2" FontSize="11.5"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{Binding Category, Converter={StaticResource CatToBrush}}" />
+                                    </Grid>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>

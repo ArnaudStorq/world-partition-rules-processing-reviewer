@@ -32,9 +32,8 @@ public partial class MainWindow : Window
         // compensate with matching padding so nothing is clipped and the taskbar stays visible.
         RootGrid.Margin = max ? SystemParameters.WindowResizeBorderThickness : new Thickness(0);
 
-        // Swap the glyph and tooltip between Maximize and Restore. Update the inner TextBlock's Text
-        // (not the button Content) so the hard-coded white foreground is preserved in every theme.
-        MaxRestoreGlyph.Text = max ? "\uE923" : "\uE922";
+        // Swap the glyph and tooltip between Maximize and Restore.
+        MaxRestoreButton.Content = max ? "\uE923" : "\uE922";
         MaxRestoreButton.ToolTip = max ? "Restore" : "Maximize";
     }
 
@@ -47,6 +46,9 @@ public partial class MainWindow : Window
         SetLogPanelVisible(vm.ShowActivityLog);
 
         ApplyBackdrop(vm);
+
+        // Independent of the backdrop setting: the rounded frame is what the rest of Windows 11 does.
+        Services.WindowBackdrop.TryRoundCorners(this);
 
         if (vm.Settings.AutoRefreshOnStartup && vm.RefreshBuildsCommand.CanExecute(null))
             await vm.RefreshBuildsCommand.ExecuteAsync(null);

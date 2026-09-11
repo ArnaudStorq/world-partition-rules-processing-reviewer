@@ -21,7 +21,10 @@ public static class ChartPalette
     public static SKColor Track => Resolve("Brush.ChartTrack");
     public static SKColor Accent => Resolve("Brush.Accent");
     public static SKColor Surface => Resolve("Brush.Surface");
+    public static SKColor SurfaceAlt => Resolve("Brush.SurfaceAlt");
+    public static SKColor Border => Resolve("Brush.Border");
     public static SKColor TextPrimary => Resolve("Brush.TextPrimary");
+    public static SKColor TextSecondary => Resolve("Brush.TextSecondary");
     public static SKColor TextMuted => Resolve("Brush.TextMuted");
 
     public static SKColor Severity(AnomalySeverity severity) => Resolve(severity switch
@@ -50,6 +53,13 @@ public static class ChartPalette
     public static SolidColorPaint Paint(SKColor color) => new(color);
 
     public static SolidColorPaint LabelPaint() => new(TextMuted) { SKTypeface = SKTypeface.FromFamilyName("Segoe UI") };
+
+    /// <summary>
+    /// Text paint for the legend and tooltips LiveCharts draws itself. Their defaults are tuned for a
+    /// white canvas, so without this they stay black on the dark theme's panels.
+    /// </summary>
+    public static SolidColorPaint ChromeTextPaint() =>
+        new(TextSecondary) { SKTypeface = SKTypeface.FromFamilyName("Segoe UI") };
 
     private static SKColor Resolve(string key)
     {
